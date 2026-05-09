@@ -1,0 +1,69 @@
+﻿<Window x:Class="TonyaRFApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TonyaRFApp"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Tonya RF Client Manager"
+                   FontSize="24"
+                   Margin="0,0,0,20"/>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    Margin="0,0,0,20">
+
+            <TextBox x:Name="txtFirstName"
+                 Width="150"
+                 Margin="0,0,10,0"
+                 Height="30"/>
+
+            <TextBox x:Name="txtSurname"
+                 Width="150"
+                 Margin="0,0,10,0"
+                 Height="30"/>
+
+            <TextBox x:Name="txtPhone"
+                 Width="150"
+                 Margin="0,0,10,0"
+                 Height="30"/>
+
+            <Button Content="Add Client"
+                Height="30"
+                Width="120"
+                Click="AddClient_Click"/>
+
+            <Button Content="Update Client"
+                    Width="120"
+                    Height="30"
+                    Margin="10,0,0,0"
+                    Click="UpdateClient_Click"/>
+
+            <Button Content="Delete Client"
+                    Width="120"
+                    Height="30"
+                    Margin="10,0,0,0"
+                    Click="DeleteClient_Click"/>
+
+            <TextBox x:Name="txtSearch"
+                     Width="200"
+                     Height="30"
+                     Margin="2,0,10,0"
+                     TextChanged="txtSearch_TextChanged"/>
+            
+        </StackPanel>
+        
+        <DataGrid x:Name="dgClients"
+                  Grid.Row="2"
+                  AutoGenerateColumns="True"
+                  SelectionChanged="dgClients_SelectionChanged"/>
+    </Grid>
+</Window>
