@@ -167,7 +167,7 @@ namespace TonyaRFApp
             dpAppointmentDate.SelectedDate = row.Field<DateTime?>("AppointmentDate");
             var appointmentTime = row.Field<TimeSpan?>("AppointmentTime");
             txtAppointmentTime.Text = appointmentTime?.ToString(@"hh\:mm") ?? string.Empty;
-            txtAppointmentNotes.Text = row.Field<string>("AppointmentNotes") ?? "N/A";
+            txtAppointmentNotes.Text = row.Field<string>("Notes") ?? "N/A";
         }
         private void UpdateClient_Click(object sender, RoutedEventArgs e) // Update client info method
         {
@@ -187,7 +187,7 @@ namespace TonyaRFApp
                         Surname = @Surname,
                         DOB = @DOB,
                         Address = @Address,
-                        PhoneNumber = @Phone
+                        PhoneNumber = @Phone,
                         HasAllergies = @HasAllergies,
                         AllergyDetails = @AllergyDetails
                     WHERE ClientID = @ClientID";
@@ -390,6 +390,11 @@ namespace TonyaRFApp
         
         private void BookAppointment_Click(object sender, RoutedEventArgs e)        //Book Appointment click method
         {
+            TimeSpan? parsedTime = null;
+            if (!string.IsNullOrWhiteSpace(txtAppointmentTime.Text) &&
+                    TimeSpan.TryParse(txtAppointmentTime.Text, out var t))
+                parsedTime = t;
+
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
@@ -419,7 +424,8 @@ namespace TonyaRFApp
 
                 command.Parameters.AddWithValue("@AppointmentDate", dpAppointmentDate.SelectedDate);
 
-                command.Parameters.AddWithValue("@AppointmentTime", txtAppointmentTime.Text);
+                var p = command.Parameters.Add("@AppointmentTime", SqlDbType.Time);
+                p.Value = parsedTime.HasValue ? (object)parsedTime.Value : DBNull.Value;
 
                 command.Parameters.AddWithValue("@Notes", txtAppointmentNotes.Text);
 
