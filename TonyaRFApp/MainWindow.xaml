@@ -5,148 +5,190 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TonyaRFApp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="500" Width="1100">
+        Title="MainWindow" Height="700" Width="1500">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-
         <TextBlock Text="Tonya RF Client Manager"
-                   FontSize="24"
-                   Margin="0,0,0,20"/>
-
-        <StackPanel Grid.Row="1"
+                   FontSize="20"
+                   Margin="10,10,0,10"/>
+        <TabControl Grid.Row="1" Margin="10">
+            <TabItem Header="Clients &amp; Appointments">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     Margin="0,0,0,20">
 
-            <TextBox x:Name="txtFirstName"
+                        <TextBox x:Name="txtFirstName"
                  Width="150"
                  Margin="0,0,10,0"
                  Height="30"/>
 
-            <TextBox x:Name="txtSurname"
+                        <TextBox x:Name="txtSurname"
                  Width="150"
                  Margin="0,0,10,0"
                  Height="30"/>
 
-            <TextBox x:Name="txtPhone"
+                        <TextBox x:Name="txtPhone"
                  Width="150"
                  Margin="0,0,10,0"
                  Height="30"/>
 
-            <DatePicker x:Name="dpDOB"
+                        <DatePicker x:Name="dpDOB"
                      Width="130"
                      Margin="10,0,0,0"
                      Height="30"/>
 
-            <TextBox x:Name="txtAddress"
+                        <TextBox x:Name="txtAddress"
                      Width="180"
                      Margin="10,0,0,0"
                      Height="30"/>
 
-            <CheckBox x:Name="chkAllergies"
+                        <CheckBox x:Name="chkAllergies"
                       Content="Allergies?"
                       Margin="10,0,0,0" Height="30"/>
 
-            <TextBox x:Name="txtAllergyDetails"
+                        <TextBox x:Name="txtAllergyDetails"
                      Width="180"
-                     Margin="10,0,0,0"
+                     Margin="10,0,20,0"
                      Height="30"/>
 
 
 
-            <Button Content="Add Client"
+                        <Button Content="Add Client"
                 Height="30"
                 Width="120"
                 Click="AddClient_Click"/>
 
-            <Button Content="Update Client"
+                        <Button Content="Update Client"
                     Width="120"
                     Height="30"
                     Margin="10,0,0,0"
                     Click="UpdateClient_Click"/>
 
-            <Button Content="Delete Client"
+                        <Button Content="Delete Client"
                     Width="120"
                     Height="30"
-                    Margin="10,0,0,0"
+                    Margin="10,0,10,0"
                     Click="DeleteClient_Click"/>
 
-            <TextBox x:Name="txtSearch"
+                        <TextBox x:Name="txtSearch"
                      Width="200"
                      Height="30"
                      Margin="2,0,10,0"
                      TextChanged="txtSearch_TextChanged"/>
 
-        </StackPanel>
+                    </StackPanel>
 
-        <StackPanel Grid.Row="1"
+                    <StackPanel Grid.Row="1"
                     Orientation="Vertical"
                     Margin="0,80,0,20">
-            <TextBlock Text="Book Appointment"
+                        <TextBlock Text="Book Appointment"
                        FontSize="18"
                        Margin="0,10,0,10"/>
-            <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal">
 
-                <ComboBox x:Name="cbClients"
-                          Width="200"
-                          Height="20"
+                            <ComboBox x:Name="cbClients"
+                          Width="250"
+                          Height="30"
                           Margin="0,0,10,0"/>
-                <ComboBox x:Name="cbTreatments"
+                            <ComboBox x:Name="cbTreatments"
                           Width="250"
                           Height="30"
                           Margin="0,0,10,0"/>
 
-                <DatePicker 
+                            <DatePicker 
                     x:Name="dpAppointmentDate"
                     Width="150"
                     Margin="0,0,10,0"/>
-                <TextBox x:Name="txtAppointmentTime"
+                            <TextBox x:Name="txtAppointmentTime"
                          Width="100"
                          Height="30"
                          Margin="0,0,10,0"/>
-                <TextBox x:Name="txtAppointmentNotes"
+                            <TextBox x:Name="txtAppointmentNotes"
                          Width="200"
                          Height="30"
                          Margin="0,0,10,0"/>
 
-                <Button Content="Book Appointment"
+                            <Button Content="Book Appointment"
                         Width="150"
                         Height="30"
                  Click="BookAppointment_Click"/>
-                
-                <Button Content="Update Appointment"
+
+                            <Button Content="Update Appointment"
                         Width="150"
                         Height="30"
                         Margin="10,0,0,0"
                         Click="UpdateAppointment_Click"/>
 
-                <Button Content="Delete Appointment"
+                            <Button Content="Delete Appointment"
                         Width="150"
                         Height="30"
                         Margin="10,0,0,0"
                         Click="DeleteAppointment_Click"/>
 
-            </StackPanel>
-        </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
 
-        <StackPanel Grid.Row="2">
-            <TextBlock Text="Clients"
+                    <StackPanel Grid.Row="2">
+                        <TextBlock Text="Clients"
                        FontSize="18"
                        Margin="0,0,0,5"/>
-            <DataGrid x:Name="dgClients"
+                        <DataGrid x:Name="dgClients"
                       Height="170"
                       AutoGenerateColumns="True"
                       SelectionChanged="dgClients_SelectionChanged"/>
-            <TextBlock Text="Appointments"
+                        <TextBlock Text="Appointments"
                        FontSize="18"
                        Margin="0,20,0,5"/>
-            <DataGrid x:Name="dgAppointments"
+                        <DataGrid x:Name="dgAppointments"
                       Height="170"
-                      AutoGenerateColumns="True"
-                      SelectionChanged="dgAppointments_SelectionChanged"/>
-        </StackPanel>
+                      AutoGenerateColumns="False"
+                      SelectionChanged="dgAppointments_SelectionChanged">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Client" Binding="{Binding ClientName}" Width="150"/>
+                                <DataGridTextColumn Header="Treatment" Binding="{Binding TreatmentName}" Width="200"/>
+                                <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat=€\{0:0.00\}}" Width="75"/>
+                                <DataGridTextColumn Header="Date" Binding="{Binding AppointmentDate, StringFormat=dd/MM/yyyy}" Width="100"/>
+                                <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime}" Width="80"/>
+                                <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Treatments">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+                        <TextBox x:Name="txtTreatmentName" Width="200" Height="30" Margin="0,0,10,0"/>
+                        <TextBox x:Name="txtPrice" Width="100" Height="30" Margin="0,0,10,0"/>
+                        <TextBox x:Name="txtDurationMinutes" Width="100" Height="30" Margin="0,0,10,0"/>
+
+                        <Button Content="Add Treatment" Width="130" Height="30" Click="AddTreatment_Click"/>
+                        <Button Content="Update Treatment" Width="130" Height="30" Margin="10,0,0,0" Click="UpdateTreatment_Click"/>
+                        <Button Content="Delete Treatment" Width="130" Height="30" Margin="10,0,0,0" Click="DeleteTreatment_Click"/>
+                        
+                    </StackPanel>
+                    <DataGrid x:Name="dgTreatments" Grid.Row="1" AutoGenerateColumns="False" SelectionChanged="dgTrearments_SelectionChanged">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Treatment Name" Binding="{Binding TreatmentName}" Width="250"/>
+                            <DataGridTextColumn Header="Price" Binding="{Binding Price}" Width="100"/>
+                            <DataGridTextColumn Header="Duration (mins)" Binding="{Binding DurationMinutes}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>

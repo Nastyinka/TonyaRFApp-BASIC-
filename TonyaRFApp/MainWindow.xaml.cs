@@ -27,6 +27,7 @@ namespace TonyaRFApp
 
         private int selectedClientId = -1;
         private int selectedAppointmentId = -1;
+        private int selectedTreatmentId = -1;
 
 
         public MainWindow()
@@ -36,10 +37,11 @@ namespace TonyaRFApp
             LoadClientComboBox();
             LoadTreatmentComboBox();
             LoadAppointments();
+            LoadTreatments();
         }
-        private void LoadClients()
+        private void LoadClients()              
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(connectionString))  //Create connection
             {
                 connection.Open();
                 string query = "SELECT * FROM Clients";
@@ -47,6 +49,18 @@ namespace TonyaRFApp
                 DataTable table = new DataTable();
                 adapter.Fill(table);
                 dgClients.ItemsSource = table.DefaultView;
+            }
+        }
+        private void LoadTreatments()
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "SELECT TreatmentID, TreatmentName, Price, DurationMinutes FROM Treatments";
+                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                DataTable table = new DataTable();
+                adapter.Fill(table);
+                dgTreatments.ItemsSource = table.DefaultView;
             }
         }
         private void SearchClients(string searchText)
@@ -116,14 +130,42 @@ namespace TonyaRFApp
 
             LoadClients();
             LoadClientComboBox();
+        }
+        private void AddTreatment_Click(object sender, RoutedEventArgs e)          //Add treatment click method
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
 
-            txtFirstName.Clear();
-            txtSurname.Clear();
-            dpDOB.SelectedDate = null;
-            txtAddress.Clear();
-            txtPhone.Clear();
-            chkAllergies.IsChecked = false;
-            txtAllergyDetails.Clear();
+                if (!decimal.TryParse(txtPrice.Text, out decimal price))
+                {
+                    MessageBox.Show("Please enter a valid price (e.g. 45.00)");
+                    return;
+                }
+
+                string query = @"
+                INSERT INTO Clients
+                (
+                    TreatmentName,
+                    Price,
+                    DurationMinutes,
+                )
+                VALUES
+                (
+                    @TreatmentName,
+                    @Price,
+                    @DurationMinutes,
+                )";
+
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@FirstName", txtFirstName.Text);
+                command.Parameters.AddWithValue("@Price", txtPrice.Text);
+                command.Parameters.AddWithValue("@DurationMinutes", txtDurationMinutes.Text);
+
+                command.ExecuteNonQuery();
+            }
+
+            LoadTreatments();
         }
         private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -168,6 +210,25 @@ namespace TonyaRFApp
             var appointmentTime = row.Field<TimeSpan?>("AppointmentTime");
             txtAppointmentTime.Text = appointmentTime?.ToString(@"hh\:mm") ?? string.Empty;
             txtAppointmentNotes.Text = row.Field<string>("Notes") ?? "N/A";
+        }
+        private void dgTreatments_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (dgTreatments.SelectedItem == null)
+                return;
+
+            if (!(dgTreatments.SelectedItem is DataRowView drv))
+                return;
+
+            DataRow row =
+                drv.Row;
+            int v = row.Field<int>("TreatmentID");
+            selectedTreatmentId = v;
+
+
+            txtTreatmentName.Text = row.Field<string>("TreatmentName");
+            
+            txtPrice.Text = row.Field<string>("Price");
+            txtAddress.Text = row.Field<string>("DurationMinutes");
         }
         private void UpdateClient_Click(object sender, RoutedEventArgs e) // Update client info method
         {
