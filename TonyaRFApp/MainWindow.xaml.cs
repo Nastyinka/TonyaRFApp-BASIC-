@@ -50,6 +50,40 @@ namespace TonyaRFApp
                 adapter.Fill(table);
                 dgClients.ItemsSource = table.DefaultView;
             }
+        } 
+        private void LoadAppointments()
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                string query = @"
+                    SELECT
+                        a.AppointmentsID,
+                        a.ClientID,
+                        a.TreatmentID,
+                        c.FirstName + ' ' + c.Surname AS ClientName,
+                        t.TreatmentName,
+                        t.Price,
+                        a.AppointmentDate,
+                        a.AppointmentTime,
+                        a.Notes
+                    FROM Appointments a
+                    JOIN Clients c
+                        ON a.ClientID = c.ClientID
+                    JOIN Treatments t
+                        ON a.TreatmentID = t.TreatmentID
+                    ORDER BY
+                        a.AppointmentDate,
+                        a.AppointmentTime";
+
+                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+
+                DataTable table = new DataTable();
+
+                adapter.Fill(table);
+                dgAppointments.ItemsSource = table.DefaultView;
+            }
         }
         private void LoadTreatments()
         {
@@ -133,39 +167,47 @@ namespace TonyaRFApp
         }
         private void AddTreatment_Click(object sender, RoutedEventArgs e)          //Add treatment click method
         {
+            // Basic validation
+            if (string.IsNullOrWhiteSpace(txtTreatmentName.Text))
+            {
+                MessageBox.Show("Please enter a treatment name.");
+                return;
+            }
+
+            if (!decimal.TryParse(txtPrice.Text, out decimal price))
+            {
+                MessageBox.Show("Please enter a valid price (e.g. 45.00)");
+                return;
+            }
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
 
-                if (!decimal.TryParse(txtPrice.Text, out decimal price))
-                {
-                    MessageBox.Show("Please enter a valid price (e.g. 45.00)");
-                    return;
-                }
-
                 string query = @"
-                INSERT INTO Clients
+                INSERT INTO Treatments
                 (
                     TreatmentName,
                     Price,
-                    DurationMinutes,
+                    DurationMinutes
                 )
                 VALUES
                 (
                     @TreatmentName,
                     @Price,
-                    @DurationMinutes,
+                    @DurationMinutes
                 )";
 
                 SqlCommand command = new SqlCommand(query, connection);
                 command.Parameters.AddWithValue("@FirstName", txtFirstName.Text);
-                command.Parameters.AddWithValue("@Price", txtPrice.Text);
+                command.Parameters.AddWithValue("@Price", price);
                 command.Parameters.AddWithValue("@DurationMinutes", txtDurationMinutes.Text);
 
                 command.ExecuteNonQuery();
             }
 
             LoadTreatments();
+            LoadTreatmentComboBox(); //  keeps the booking tab in sync
+            MessageBox.Show("Treatment added successfully.");
         }
         private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -219,16 +261,15 @@ namespace TonyaRFApp
             if (!(dgTreatments.SelectedItem is DataRowView drv))
                 return;
 
-            DataRow row =
-                drv.Row;
-            int v = row.Field<int>("TreatmentID");
-            selectedTreatmentId = v;
+            DataRow row = drv.Row;
 
+            int? v = row.Field<int?>("TreatmentID");
+            if (!v.HasValue) return;
+            selectedTreatmentId = v.Value;
 
             txtTreatmentName.Text = row.Field<string>("TreatmentName");
-            
-            txtPrice.Text = row.Field<string>("Price");
-            txtAddress.Text = row.Field<string>("DurationMinutes");
+            txtPrice.Text = row.Field<decimal>("Price").ToString();
+            txtDurationMinutes.Text = row.Field<int?>("DurationMinutes")?.ToString() ?? "";
         }
         private void UpdateClient_Click(object sender, RoutedEventArgs e) // Update client info method
         {
@@ -272,50 +313,7 @@ namespace TonyaRFApp
             LoadClientComboBox();
 
             MessageBox.Show("Client Updated Successfully");
-        }
-        private void DeleteClient_Click(Object sender, RoutedEventArgs e)       //Delete client click method
-        {
-            if(selectedClientId == -1)
-            {
-                MessageBox.Show("Please select a client.");
-                return;
-            }
-
-            MessageBoxResult result = MessageBox.Show(
-                "Are you sure you want to delete this client?",
-                "Confirm Delete",
-                MessageBoxButton.YesNo);
-
-            if (result != MessageBoxResult.Yes)
-                return;
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-
-                string query = "DELETE FROM Clients WHERE ClientID = @ClientID";
-                SqlCommand command = new SqlCommand(query, connection);
-
-                command.Parameters.AddWithValue("@ClientID", selectedClientId);
-
-                command.ExecuteNonQuery();
-            }
-            LoadClients();
-            LoadClientComboBox();
-
-            txtFirstName.Clear();
-            txtSurname.Clear();
-            dpDOB.SelectedDate = null;
-            txtAddress.Clear();
-            txtPhone.Clear();
-            chkAllergies.IsChecked = false;
-            txtAllergyDetails.Clear();
-
-            selectedClientId = -1;
-
-            MessageBox.Show("Client deleted successfully.");
-        }
-
+        } 
         private void UpdateAppointment_Click(object sender, RoutedEventArgs e) // Update Appointment info method
         {
             if (selectedAppointmentId == -1)
@@ -359,7 +357,97 @@ namespace TonyaRFApp
 
             MessageBox.Show("Appointment Updated Successfully");
         }
+        private void UpdateTreatment_Click(object sender, RoutedEventArgs e) // Update treatment info method
+        {
+            if (selectedTreatmentId == -1)
+            {
+                MessageBox.Show("Please select a treatment.");
+                return;
+            }
+            if (!decimal.TryParse(txtPrice.Text, out decimal price))
+            {
+                MessageBox.Show("Please enter a valid price (e.g. 45.00)");
+                return;
+            }
+            //Parse duration saferly
+            int? duration = null;
+            if (int.TryParse(txtDurationMinutes.Text, out int d))
+                duration = d;
 
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = @"
+                    UPDATE Treatments
+                    SET
+                        TreatmentName = @TreatmentName,
+                        Price = @Price,
+                        DurationMinutes = @DurationMinutes
+                    WHERE TreatmentID = @TreatmentID";
+
+                SqlCommand command = new SqlCommand(query, connection);
+
+                command.Parameters.AddWithValue("@TreatmentName", txtTreatmentName.Text);
+                command.Parameters.AddWithValue("@Price", price);
+                
+                var p = command.Parameters.Add("@DurationMinutes", SqlDbType.Int);
+                p.Value = duration.HasValue ? (object)duration.Value : DBNull.Value;
+
+                command.Parameters.AddWithValue("@TreatmentID", selectedTreatmentId);
+
+                command.ExecuteNonQuery();
+            }
+
+            LoadTreatments();
+            LoadTreatmentComboBox();
+
+            MessageBox.Show("Treatment Updated Successfully");
+        }
+
+        private void DeleteClient_Click(Object sender, RoutedEventArgs e)       //Delete client click method
+        {
+            if(selectedClientId == -1)
+            {
+                MessageBox.Show("Please select a client.");
+                return;
+            }
+
+            MessageBoxResult result = MessageBox.Show(
+                "Are you sure you want to delete this client?",
+                "Confirm Delete",
+                MessageBoxButton.YesNo);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                string query = "DELETE FROM Clients WHERE ClientID = @ClientID";
+                SqlCommand command = new SqlCommand(query, connection);
+
+                command.Parameters.AddWithValue("@ClientID", selectedClientId);
+
+                command.ExecuteNonQuery();
+            }
+            LoadClients();
+            LoadClientComboBox();
+
+            txtFirstName.Clear();
+            txtSurname.Clear();
+            dpDOB.SelectedDate = null;
+            txtAddress.Clear();
+            txtPhone.Clear();
+            chkAllergies.IsChecked = false;
+            txtAllergyDetails.Clear();
+
+            selectedClientId = -1;
+
+            MessageBox.Show("Client deleted successfully.");
+        }
+
+     
         private void DeleteAppointment_Click(Object sender, RoutedEventArgs e)       //Delete Appointment click method
         {
             if (selectedAppointmentId == -1)
@@ -396,6 +484,44 @@ namespace TonyaRFApp
 
 
             MessageBox.Show("Appointment deleted successfully.");
+        }
+        private void DeleteTreatment_Click(Object sender, RoutedEventArgs e)       //Delete treatment click method
+        {
+            if (selectedTreatmentId == -1)
+            {
+                MessageBox.Show("Please select a treatment.");
+                return;
+            }
+
+            MessageBoxResult result = MessageBox.Show(
+                "Are you sure you want to delete this treatment?",
+                "Confirm Delete",
+                MessageBoxButton.YesNo);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                string query = "DELETE FROM Treatments WHERE TreatmentID = @TreatmentID";
+                SqlCommand command = new SqlCommand(query, connection);
+
+                command.Parameters.AddWithValue("@TreatmentID", selectedTreatmentId);
+
+                command.ExecuteNonQuery();
+            }
+            LoadTreatments();
+            LoadTreatmentComboBox();
+
+            txtTreatmentName.Clear();
+            txtPrice.Clear();
+            txtDurationMinutes.Clear();
+
+            selectedTreatmentId = -1;
+
+            MessageBox.Show("Treatment deleted successfully.");
         }
         private void LoadClientComboBox()               //CLient ComboBox Method
         {
@@ -497,39 +623,6 @@ namespace TonyaRFApp
             MessageBox.Show("Appointment Booked Successfully.");
         }
 
-        private void LoadAppointments()
-        {
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-
-                string query = @"
-                    SELECT
-                        a.AppointmentsID,
-                        a.ClientID,
-                        a.TreatmentID,
-                        c.FirstName + ' ' + c.Surname AS ClientName,
-                        t.TreatmentName,
-                        t.Price,
-                        a.AppointmentDate,
-                        a.AppointmentTime,
-                        a.Notes
-                    FROM Appointments a
-                    JOIN Clients c
-                        ON a.ClientID = c.ClientID
-                    JOIN Treatments t
-                        ON a.TreatmentID = t.TreatmentID
-                    ORDER BY
-                        a.AppointmentDate,
-                        a.AppointmentTime";
-
-                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
-
-                DataTable table = new DataTable();
-
-                adapter.Fill(table);
-                dgAppointments.ItemsSource = table.DefaultView;
-            }
-        }
+       
     }
 }

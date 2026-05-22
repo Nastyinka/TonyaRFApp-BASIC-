@@ -56,10 +56,17 @@
                       Margin="10,0,0,0" Height="30"/>
 
                         <TextBox x:Name="txtAllergyDetails"
-                     Width="180"
-                     Margin="10,0,20,0"
+                     Width="140"
+                     Margin="10,0,0,0"
                      Height="30"/>
 
+                        <CheckBox x:Name="chkImplants"
+                      Content="Implants?"
+                      Margin="10,0,0,0" Height="30"/>
+                        <TextBox x:Name="txtImplantDetails"
+                     Width="140"
+                     Margin="10,0,0,0"
+                     Height="30"/>
 
 
                         <Button Content="Add Client"
@@ -144,6 +151,7 @@
                         <DataGrid x:Name="dgClients"
                       Height="170"
                       AutoGenerateColumns="True"
+                      IsReadOnly="True"
                       SelectionChanged="dgClients_SelectionChanged"/>
                         <TextBlock Text="Appointments"
                        FontSize="18"
@@ -151,6 +159,7 @@
                         <DataGrid x:Name="dgAppointments"
                       Height="170"
                       AutoGenerateColumns="False"
+                      IsReadOnly="True"
                       SelectionChanged="dgAppointments_SelectionChanged">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Client" Binding="{Binding ClientName}" Width="150"/>
@@ -180,7 +189,7 @@
                         <Button Content="Delete Treatment" Width="130" Height="30" Margin="10,0,0,0" Click="DeleteTreatment_Click"/>
                         
                     </StackPanel>
-                    <DataGrid x:Name="dgTreatments" Grid.Row="1" AutoGenerateColumns="False" SelectionChanged="dgTrearments_SelectionChanged">
+                    <DataGrid x:Name="dgTreatments" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionChanged="dgTreatments_SelectionChanged">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Treatment Name" Binding="{Binding TreatmentName}" Width="250"/>
                             <DataGridTextColumn Header="Price" Binding="{Binding Price}" Width="100"/>
