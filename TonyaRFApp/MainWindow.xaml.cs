@@ -38,6 +38,7 @@ namespace TonyaRFApp
             LoadTreatmentComboBox();
             LoadAppointments();
             LoadTreatments();
+            LoadTimeSlots();
         }
         private void LoadClients()              
         {
@@ -250,7 +251,7 @@ namespace TonyaRFApp
 
             dpAppointmentDate.SelectedDate = row.Field<DateTime?>("AppointmentDate");
             var appointmentTime = row.Field<TimeSpan?>("AppointmentTime");
-            txtAppointmentTime.Text = appointmentTime?.ToString(@"hh\:mm") ?? string.Empty;
+            cbAppointmentTime.SelectedItem = appointmentTime?.ToString(@"hh\:mm") ?? string.Empty;
             txtAppointmentNotes.Text = row.Field<string>("Notes") ?? "N/A";
         }
         private void dgTreatments_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -322,9 +323,8 @@ namespace TonyaRFApp
                 return;
             }
             TimeSpan? parsedTime = null;
-            if (!string.IsNullOrWhiteSpace(txtAppointmentTime.Text) &&
-                    TimeSpan.TryParse(txtAppointmentTime.Text, out var t))
-                parsedTime = t;
+            if (cbAppointmentTime.SelectedItem is string selectedTime)
+                parsedTime = TimeSpan.Parse(selectedTime);
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
@@ -478,7 +478,7 @@ namespace TonyaRFApp
             LoadAppointments();
 
             selectedAppointmentId = -1;
-            txtAppointmentTime.Clear();
+            cbAppointmentTime = null;
             txtAppointmentNotes.Clear();
             dpAppointmentDate.SelectedDate = null;
 
@@ -523,7 +523,21 @@ namespace TonyaRFApp
 
             MessageBox.Show("Treatment deleted successfully.");
         }
-        private void LoadClientComboBox()               //CLient ComboBox Method
+
+        private void LoadTimeSlots()
+        {
+            var times = new List<string>();
+            //Loop every hour and ever 5 min intervals
+            for (int hour = 0; hour < 24; hour++)
+            {
+                for (int minute = 0; minute < 60; minute += 5)
+                {
+                    times.Add($"{hour:D2}:{minute:D2}");
+                }
+            }
+            cbAppointmentTime.ItemsSource = times;
+        }
+        private void LoadClientComboBox()               //Client ComboBox Method
         {
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
@@ -578,9 +592,8 @@ namespace TonyaRFApp
         private void BookAppointment_Click(object sender, RoutedEventArgs e)        //Book Appointment click method
         {
             TimeSpan? parsedTime = null;
-            if (!string.IsNullOrWhiteSpace(txtAppointmentTime.Text) &&
-                    TimeSpan.TryParse(txtAppointmentTime.Text, out var t))
-                parsedTime = t;
+            if (cbAppointmentTime.SelectedItem is string selectedTime)
+                parsedTime = TimeSpan.Parse(selectedTime);
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
