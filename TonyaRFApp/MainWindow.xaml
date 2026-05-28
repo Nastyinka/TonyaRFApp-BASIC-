@@ -6,6 +6,37 @@
         xmlns:local="clr-namespace:TonyaRFApp"
         mc:Ignorable="d"
         Title="MainWindow" Height="700" Width="1500">
+    <Window.Resources>
+        <Style x:Key="PlaceholderStyle" TargetType="TextBox">
+            <Setter Property="Template">
+                <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="2">
+                        <Grid>
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" Margin="3,0,0,0"/>
+                            <TextBlock Text="{TemplateBinding Tag}" Foreground="Gray" FontStyle="Italic" VerticalAlignment="Center" Margin="5,0,0,0" IsHitTestVisible="False">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <!-- This style will hide the placeholder text when the TextBox has text or is focused -->
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource TemplatedParent}}" Value="">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#FFABADB3"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="White"/>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -26,47 +57,26 @@
                     Orientation="Horizontal"
                     Margin="0,0,0,20">
 
-                        <TextBox x:Name="txtFirstName"
-                 Width="150"
-                 Margin="0,0,10,0"
-                 Height="30"/>
+                        <TextBox x:Name="txtFirstName" Width="150" Margin="0,0,10,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="First Name"/>
 
-                        <TextBox x:Name="txtSurname"
-                 Width="150"
-                 Margin="0,0,10,0"
-                 Height="30"/>
+                        <TextBox x:Name="txtSurname" Width="150" Margin="0,0,10,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="Surname"/>
 
-                        <TextBox x:Name="txtPhone"
-                 Width="150"
-                 Margin="0,0,10,0"
-                 Height="30"/>
+                        <TextBox x:Name="txtPhone" Width="150" Margin="0,0,10,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="Phone"/>
 
-                        <DatePicker x:Name="dpDOB"
-                     Width="130"
-                     Margin="10,0,0,0"
-                     Height="30"/>
+                        <DatePicker x:Name="dpDOB" Width="130" Margin="10,0,0,0" Height="30"/>
 
-                        <TextBox x:Name="txtAddress"
-                     Width="180"
-                     Margin="10,0,0,0"
-                     Height="30"/>
+                        <TextBox x:Name="txtAddress" Width="180" Margin="10,0,0,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="Address"/>
 
                         <CheckBox x:Name="chkAllergies"
                       Content="Allergies?"
                       Margin="10,0,0,0" Height="30"/>
 
-                        <TextBox x:Name="txtAllergyDetails"
-                     Width="140"
-                     Margin="10,0,0,0"
-                     Height="30"/>
+                        <TextBox x:Name="txtAllergyDetails" Width="140" Margin="10,0,0,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="Allergy Details"/>
 
                         <CheckBox x:Name="chkImplants"
                       Content="Implants?"
                       Margin="10,0,0,0" Height="30"/>
-                        <TextBox x:Name="txtImplantDetails"
-                     Width="140"
-                     Margin="10,0,0,0"
-                     Height="30"/>
+                        <TextBox x:Name="txtImplantDetails" Width="140" Margin="10,0,0,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="Implant Details"/>
 
                     <StackPanel Grid.Row="1" Orientation="Vertical" Margin="10,0,0,0">
                             <Button Content="Add Client"
@@ -85,11 +95,7 @@
                     Click="DeleteClient_Click"/>
                     </StackPanel>
 
-                    <TextBox x:Name="txtSearch"
-                     Width="200"
-                     Height="30"
-                     Margin="20,0,10,0"
-                     TextChanged="txtSearch_TextChanged"/>
+                    <TextBox x:Name="txtSearch" Width="200" Height="30" Margin="20,0,10,0" TextChanged="txtSearch_TextChanged" Style="{StaticResource PlaceholderStyle}" Tag="Search"/>
 
                     </StackPanel>
 
@@ -118,10 +124,7 @@
                          Width="100"
                          Height="30"
                          Margin="0,0,10,0"/>
-                            <TextBox x:Name="txtAppointmentNotes"
-                         Width="200"
-                         Height="30"
-                         Margin="0,0,10,0"/>
+                            <TextBox x:Name="txtAppointmentNotes" Width="200" Height="30" Margin="0,0,10,0" Style="{StaticResource PlaceholderStyle}" Tag="Appointment Notes"/>
 
                             <Button Content="Book Appointment"
                         Width="150"
@@ -179,9 +182,9 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
-                        <TextBox x:Name="txtTreatmentName" Width="200" Height="30" Margin="0,0,10,0"/>
-                        <TextBox x:Name="txtPrice" Width="100" Height="30" Margin="0,0,10,0"/>
-                        <TextBox x:Name="txtDurationMinutes" Width="100" Height="30" Margin="0,0,10,0"/>
+                        <TextBox x:Name="txtTreatmentName" Width="200" Height="30" Margin="0,0,10,0" Style="{StaticResource PlaceholderStyle}" Tag="Treatment Name"/>
+                        <TextBox x:Name="txtPrice" Width="100" Height="30" Margin="0,0,10,0" Style="{StaticResource PlaceholderStyle}" Tag="Price"/>
+                        <TextBox x:Name="txtDurationMinutes" Width="100" Height="30" Margin="0,0,10,0" Style="{StaticResource PlaceholderStyle}" Tag="Duration (mins)"/>
 
                         <Button Content="Add Treatment" Width="130" Height="30" Click="AddTreatment_Click"/>
                         <Button Content="Update Treatment" Width="130" Height="30" Margin="10,0,0,0" Click="UpdateTreatment_Click"/>
