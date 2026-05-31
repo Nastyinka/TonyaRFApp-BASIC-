@@ -138,7 +138,15 @@ namespace TonyaRFApp
                     Address,
                     PhoneNumber,
                     HasAllergies,
-                    AllergyDetails
+                    AllergyDetails,
+                    HasImplants,
+                    ImplantDetails,
+                    HasBotox,
+                    BotoxDetails,
+                    HasFaceMetals,
+                    FaceMetalsLocation,
+                    ConsentSigned,
+                    ConsentDate
                 )
                 VALUES
                 (
@@ -148,7 +156,15 @@ namespace TonyaRFApp
                     @Address,
                     @Phone,
                     @HasAllergies,
-                    @AllergyDetails
+                    @AllergyDetails,
+                    @HasImplants,
+                    @ImplantDetails,
+                    @HasBotox,
+                    @BotoxDetails,
+                    @HasFaceMetals,
+                    @FaceMetalsLocation,
+                    @ConsentSigned,
+                    @ConsentDate
                 )";
 
                 SqlCommand command = new SqlCommand(query, connection);
@@ -159,6 +175,14 @@ namespace TonyaRFApp
                 command.Parameters.AddWithValue("@Phone", txtPhone.Text);
                 command.Parameters.AddWithValue("@HasAllergies", chkAllergies.IsChecked == true);
                 command.Parameters.AddWithValue("@AllergyDetails", txtAllergyDetails.Text);
+                command.Parameters.AddWithValue("@HasImplants", chkImplants.IsChecked == true);
+                command.Parameters.AddWithValue("@ImplantDetails", txtImplantDetails.Text);
+                command.Parameters.AddWithValue("@HasBotox", chkBotox.IsChecked == true);
+                command.Parameters.AddWithValue("@BotoxDetails", txtBotoxDetails.Text);
+                command.Parameters.AddWithValue("@HasFaceMetals", chkFaceMetals.IsChecked == true);
+                command.Parameters.AddWithValue("@FaceMetalsLocation", txtFaceMetalsLocation.Text);
+                command.Parameters.AddWithValue("@ConsentSigned", chkConsentSigned.IsChecked == true);
+                command.Parameters.AddWithValue("@ConsentDate", dpConsentDate.SelectedDate ?? (object)DBNull.Value);
 
                 command.ExecuteNonQuery();
             }
@@ -180,6 +204,9 @@ namespace TonyaRFApp
                 MessageBox.Show("Please enter a valid price (e.g. 45.00)");
                 return;
             }
+            int? duration = null;
+            if (int.TryParse(txtDurationMinutes.Text, out int d))
+                duration = d;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
@@ -199,9 +226,10 @@ namespace TonyaRFApp
                 )";
 
                 SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@FirstName", txtFirstName.Text);
+                command.Parameters.AddWithValue("@TreatmentName", txtTreatmentName.Text);
                 command.Parameters.AddWithValue("@Price", price);
-                command.Parameters.AddWithValue("@DurationMinutes", txtDurationMinutes.Text);
+                var p = command.Parameters.Add("@DurationMinutes", SqlDbType.Int);
+                p.Value = duration.HasValue ? (object)duration.Value : DBNull.Value;
 
                 command.ExecuteNonQuery();
             }
@@ -235,6 +263,14 @@ namespace TonyaRFApp
             txtPhone.Text = row.Field<string>("PhoneNumber");
             chkAllergies.IsChecked = row.Field<bool?>("HasAllergies") ?? false;
             txtAllergyDetails.Text = row.Field<string>("AllergyDetails");
+            chkImplants.IsChecked = row.Field<bool?>("HasImplants") ?? false;
+            txtImplantDetails.Text = row.Field<string>("ImplantDetails");
+            chkBotox.IsChecked = row.Field<bool?>("HasBotox") ?? false;
+            txtBotoxDetails.Text = row.Field<string>("BotoxDetails");
+            chkFaceMetals.IsChecked = row.Field<bool?>("HasFaceMetals") ?? false;
+            txtFaceMetalsLocation.Text = row.Field<string>("FaceMetalsLocation");
+            chkConsentSigned.IsChecked = row.Field<bool?>("ConsentSigned") ?? false;
+            dpConsentDate.SelectedDate = row.Field<DateTime?>("ConsentDate");
         }
         private void dgAppointments_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -292,7 +328,15 @@ namespace TonyaRFApp
                         Address = @Address,
                         PhoneNumber = @Phone,
                         HasAllergies = @HasAllergies,
-                        AllergyDetails = @AllergyDetails
+                        AllergyDetails = @AllergyDetails,
+                        HasImplants = @HasImplants,
+                        ImplantDetails = @ImplantDetails,
+                        HasBotox = @HasBotox,
+                        BotoxDetails = @BotoxDetails,
+                        HasFaceMetals = @HasFaceMetals,
+                        FaceMetalsLocation = @FaceMetalsLocation,
+                        ConsentSigned = @ConsentSigned,
+                        ConsentDate = @ConsentDate
                     WHERE ClientID = @ClientID";
 
                 SqlCommand command = new SqlCommand(query, connection);
@@ -304,6 +348,14 @@ namespace TonyaRFApp
                 command.Parameters.AddWithValue("@Phone", txtPhone.Text);
                 command.Parameters.AddWithValue("@HasAllergies", chkAllergies.IsChecked == true);
                 command.Parameters.AddWithValue("@AllergyDetails", txtAllergyDetails.Text);
+                command.Parameters.AddWithValue("@HasImplants", chkImplants.IsChecked == true);
+                command.Parameters.AddWithValue("@ImplantDetails", txtImplantDetails.Text);
+                command.Parameters.AddWithValue("@HasBotox", chkBotox.IsChecked == true);
+                command.Parameters.AddWithValue("@BotoxDetails", txtBotoxDetails.Text);
+                command.Parameters.AddWithValue("@HasFaceMetals", chkFaceMetals.IsChecked == true);
+                command.Parameters.AddWithValue("@FaceMetalsLocation", txtFaceMetalsLocation.Text);
+                command.Parameters.AddWithValue("@ConsentSigned", chkConsentSigned.IsChecked == true);
+                command.Parameters.AddWithValue("@ConsentDate", dpConsentDate.SelectedDate ?? (object)DBNull.Value);
 
                 command.Parameters.AddWithValue("@ClientID", selectedClientId);
 
@@ -336,7 +388,7 @@ namespace TonyaRFApp
                         TreatmentID = @TreatmentID,
                         AppointmentDate = @AppointmentDate,
                         AppointmentTime = @AppointmentTime,
-                        AppointmentNotes = @Notes
+                        Notes = @Notes
                     WHERE AppointmentsID = @AppointmentsID";
 
                 SqlCommand command = new SqlCommand(query, connection);
@@ -441,6 +493,14 @@ namespace TonyaRFApp
             txtPhone.Clear();
             chkAllergies.IsChecked = false;
             txtAllergyDetails.Clear();
+            chkImplants.IsChecked = false;
+            txtImplantDetails.Clear();
+            chkBotox.IsChecked = false;
+            txtBotoxDetails.Clear();
+            chkFaceMetals.IsChecked = false;
+            txtFaceMetalsLocation.Clear();
+            chkConsentSigned.IsChecked = false;
+            dpConsentDate.SelectedDate = null;
 
             selectedClientId = -1;
 
@@ -478,7 +538,7 @@ namespace TonyaRFApp
             LoadAppointments();
 
             selectedAppointmentId = -1;
-            cbAppointmentTime = null;
+            cbAppointmentTime.SelectedItem = null;
             txtAppointmentNotes.Clear();
             dpAppointmentDate.SelectedDate = null;
 

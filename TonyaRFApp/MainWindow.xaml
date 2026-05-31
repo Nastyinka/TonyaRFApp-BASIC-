@@ -51,79 +51,86 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <StackPanel Grid.Row="1"
-                    Orientation="Horizontal"
-                    Margin="0,0,0,20">
+                    <TabControl Grid.Row="0" Margin="0,0,0,5">
+                        <TabItem Header="Basic Info">
+                            <WrapPanel Margin="5,8,5,8" Orientation="Horizontal">
+                                <TextBox x:Name="txtFirstName" Width="150" Margin="0,0,10,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="First Name"/>
+                                <TextBox x:Name="txtSurname" Width="150" Margin="0,0,10,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="Surname"/>
+                                <TextBox x:Name="txtPhone" Width="150" Margin="0,0,10,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="Phone"/>
+                                <StackPanel Orientation="Vertical" Margin="0,0,10,0">
+                                    <TextBlock Text="Date of Birth" FontSize="10" Foreground="Gray"/>
+                                    <DatePicker x:Name="dpDOB" Width="140" Height="30"/>
+                                </StackPanel>
 
-                        <TextBox x:Name="txtFirstName" Width="150" Margin="0,0,10,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="First Name"/>
+                                <TextBox x:Name="txtAddress" Width="220" Margin="0,0,10,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="Address"/>
+                            </WrapPanel>
+                        </TabItem>
+<!-- Medical Content Tab-->
+                        <TabItem Header="Medical &amp; Consent">
+                            <Grid Margin="5,8,5,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="200"/>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="200"/>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="200"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="8"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <CheckBox x:Name="chkAllergies" Content="Allergies?" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBox x:Name="txtAllergyDetails" Grid.Row="0" Grid.Column="1" Height="28" Style="{StaticResource PlaceholderStyle}" Tag="Allergy Details"/>
 
-                        <TextBox x:Name="txtSurname" Width="150" Margin="0,0,10,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="Surname"/>
+                                <CheckBox x:Name="chkImplants" Content="Implants?" Grid.Row="0" Grid.Column="3" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBox x:Name="txtImplantDetails" Grid.Row="0" Grid.Column="4" Height="28" Style="{StaticResource PlaceholderStyle}" Tag="Implant Details"/>
 
-                        <TextBox x:Name="txtPhone" Width="150" Margin="0,0,10,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="Phone"/>
+                                <CheckBox x:Name="chkBotox" Content="Botox?" Grid.Row="0" Grid.Column="6" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBox x:Name="txtBotoxDetails" Grid.Row="0" Grid.Column="7" Height="28" Style="{StaticResource PlaceholderStyle}" Tag="Botox Details"/>
 
-                        <DatePicker x:Name="dpDOB" Width="130" Margin="10,0,0,0" Height="30"/>
+                                <CheckBox x:Name="chkFaceMetals" Content="Face Metals?" Grid.Row="2" Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBox x:Name="txtFaceMetalsLocation" Grid.Row="2" Grid.Column="1" Height="28" Style="{StaticResource PlaceholderStyle}" Tag="Location"/>
 
-                        <TextBox x:Name="txtAddress" Width="180" Margin="10,0,0,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="Address"/>
+                                <CheckBox x:Name="chkConsentSigned" Content="Consent Signed?" Grid.Row="2" Grid.Column="3" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="4">
+                                    <TextBlock Text="Consent Date" FontSize="10" Foreground="Gray"/>
+                                    <DatePicker x:Name="dpConsentDate" Width="200" Height="28"/>
+                                </StackPanel>
+                            </Grid>
+                        </TabItem>
+                    </TabControl>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Content="Add Client" Height="30" Width="110" Margin="0,0,8,0" Click="AddClient_Click"/>
 
-                        <CheckBox x:Name="chkAllergies"
-                      Content="Allergies?"
-                      Margin="10,0,0,0" Height="30"/>
+                        <Button Content="Update Client" Width="110" Height="30" Margin="0,0,8,0" Click="UpdateClient_Click"/>
 
-                        <TextBox x:Name="txtAllergyDetails" Width="140" Margin="10,0,0,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="Allergy Details"/>
+                        <Button Content="Delete Client" Width="110" Height="30" Margin="0,0,20,0" Click="DeleteClient_Click"/>
 
-                        <CheckBox x:Name="chkImplants"
-                      Content="Implants?"
-                      Margin="10,0,0,0" Height="30"/>
-                        <TextBox x:Name="txtImplantDetails" Width="140" Margin="10,0,0,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="Implant Details"/>
-
-                    <StackPanel Grid.Row="1" Orientation="Vertical" Margin="10,0,0,0">
-                            <Button Content="Add Client"
-                Height="30"
-                Width="120"
-                Click="AddClient_Click"/>
-
-                        <Button Content="Update Client"
-                    Width="120"
-                    Height="30"
-                    Click="UpdateClient_Click"/>
-
-                        <Button Content="Delete Client"
-                    Width="120"
-                    Height="30"
-                    Click="DeleteClient_Click"/>
+                        <TextBox x:Name="txtSearch" Width="200" Height="30" TextChanged="txtSearch_TextChanged" Style="{StaticResource PlaceholderStyle}" Tag="Search Clients...."/>
                     </StackPanel>
-
-                    <TextBox x:Name="txtSearch" Width="200" Height="30" Margin="20,0,10,0" TextChanged="txtSearch_TextChanged" Style="{StaticResource PlaceholderStyle}" Tag="Search"/>
-
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="1"
-                    Orientation="Vertical"
-                    Margin="0,80,0,20">
+                    <!-- Appointment Booking -->
+                    <StackPanel Grid.Row="2" Margin="0,0,0,8">
                         <TextBlock Text="Book Appointment"
-                       FontSize="18"
-                       Margin="0,10,0,10"/>
+                       FontSize="16"
+                       Margin="0,0,0,6"/>
                         <StackPanel Orientation="Horizontal">
 
-                            <ComboBox x:Name="cbClients"
-                          Width="250"
-                          Height="30"
-                          Margin="0,0,10,0"/>
-                            <ComboBox x:Name="cbTreatments"
-                          Width="250"
-                          Height="30"
-                          Margin="0,0,10,0"/>
+                            <ComboBox x:Name="cbClients" Width="200" Height="30" Margin="0,0,10,0"/>
+                            <ComboBox x:Name="cbTreatments" Width="200" Height="30" Margin="0,0,10,0"/>
 
-                            <DatePicker 
-                    x:Name="dpAppointmentDate"
-                    Width="150"
-                    Margin="0,0,10,0"/>
-                            <ComboBox x:Name="cbAppointmentTime"
-                         Width="100"
-                         Height="30"
-                         Margin="0,0,10,0"/>
+                            <StackPanel Orientation="Vertical" Margin="0,0,10,0">
+                                <TextBlock Text="Appointment Date" FontSize="10" Foreground="Gray"/>
+                                <DatePicker x:Name="dpAppointmentDate" Width="150" Height="28"/>
+                            </StackPanel>
+                            
+                            <ComboBox x:Name="cbAppointmentTime" Width="100" Height="30" Margin="0,0,10,0"/>
                             <TextBox x:Name="txtAppointmentNotes" Width="200" Height="30" Margin="0,0,10,0" Style="{StaticResource PlaceholderStyle}" Tag="Appointment Notes"/>
 
                             <Button Content="Book Appointment"
@@ -146,26 +153,22 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <StackPanel Grid.Row="2">
-                        <TextBlock Text="Clients"
-                       FontSize="18"
-                       Margin="0,0,0,5"/>
+                    <StackPanel Grid.Row="3">
+                        <TextBlock Text="Clients" FontSize="18" Margin="0,0,0,4"/>
                         <DataGrid x:Name="dgClients"
-                      Height="170"
+                      Height="160"
                       AutoGenerateColumns="True"
                       IsReadOnly="True"
                       SelectionChanged="dgClients_SelectionChanged"/>
-                        <TextBlock Text="Appointments"
-                       FontSize="18"
-                       Margin="0,20,0,5"/>
+                        <TextBlock Text="Appointments" FontSize="18" Margin="0,12,0,4"/>
                         <DataGrid x:Name="dgAppointments"
-                      Height="170"
+                      Height="160"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       SelectionChanged="dgAppointments_SelectionChanged">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Client" Binding="{Binding ClientName}" Width="150"/>
-                                <DataGridTextColumn Header="Treatment" Binding="{Binding TreatmentName}" Width="200"/>
+                                <DataGridTextColumn Header="Treatment" Binding="{Binding TreatmentName}" Width="180"/>
                                 <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat=€\{0:0.00\}}" Width="75"/>
                                 <DataGridTextColumn Header="Date" Binding="{Binding AppointmentDate, StringFormat=dd/MM/yyyy}" Width="100"/>
                                 <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime}" Width="80"/>
