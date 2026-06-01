@@ -189,6 +189,24 @@ namespace TonyaRFApp
 
             LoadClients();
             LoadClientComboBox();
+
+            txtFirstName.Clear();
+            txtSurname.Clear();
+            dpDOB.SelectedDate = null;
+            txtAddress.Clear();
+            txtPhone.Clear();
+            chkAllergies.IsChecked = false;
+            txtAllergyDetails.Clear();
+            chkImplants.IsChecked = false;
+            txtImplantDetails.Clear();
+            chkBotox.IsChecked = false;
+            txtBotoxDetails.Clear();
+            chkFaceMetals.IsChecked = false;
+            txtFaceMetalDetails.Clear();
+            chkConsentSigned.IsChecked = false;
+            dpConsentDate.SelectedDate = null;
+
+            MessageBox.Show("Client added successfully.");
         }
         private void AddTreatment_Click(object sender, RoutedEventArgs e)          //Add treatment click method
         {
@@ -255,8 +273,8 @@ namespace TonyaRFApp
             int? clientId = row.Field<int?>("ClientID");
             if (!clientId.HasValue || clientId.Value == 0)
                 return;
-            int v = row.Field<int>("ClientID");
-            selectedClientId = v;
+          
+            selectedClientId = clientId.Value;
 
 
             txtFirstName.Text = row.Field<string>("FirstName");
