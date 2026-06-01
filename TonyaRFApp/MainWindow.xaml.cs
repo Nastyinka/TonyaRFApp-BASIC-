@@ -144,7 +144,7 @@ namespace TonyaRFApp
                     HasBotox,
                     BotoxDetails,
                     HasFaceMetals,
-                    FaceMetalsLocation,
+                    FaceMetalDetails,
                     ConsentSigned,
                     ConsentDate
                 )
@@ -162,7 +162,7 @@ namespace TonyaRFApp
                     @HasBotox,
                     @BotoxDetails,
                     @HasFaceMetals,
-                    @FaceMetalsLocation,
+                    @FaceMetalDetails,
                     @ConsentSigned,
                     @ConsentDate
                 )";
@@ -180,7 +180,7 @@ namespace TonyaRFApp
                 command.Parameters.AddWithValue("@HasBotox", chkBotox.IsChecked == true);
                 command.Parameters.AddWithValue("@BotoxDetails", txtBotoxDetails.Text);
                 command.Parameters.AddWithValue("@HasFaceMetals", chkFaceMetals.IsChecked == true);
-                command.Parameters.AddWithValue("@FaceMetalsLocation", txtFaceMetalsLocation.Text);
+                command.Parameters.AddWithValue("@FaceMetalDetails", txtFaceMetalDetails.Text);
                 command.Parameters.AddWithValue("@ConsentSigned", chkConsentSigned.IsChecked == true);
                 command.Parameters.AddWithValue("@ConsentDate", dpConsentDate.SelectedDate ?? (object)DBNull.Value);
 
@@ -252,6 +252,9 @@ namespace TonyaRFApp
                 return;
             DataRow row =
                 drv.Row;
+            int? clientId = row.Field<int?>("ClientID");
+            if (!clientId.HasValue || clientId.Value == 0)
+                return;
             int v = row.Field<int>("ClientID");
             selectedClientId = v;
 
@@ -268,7 +271,7 @@ namespace TonyaRFApp
             chkBotox.IsChecked = row.Field<bool?>("HasBotox") ?? false;
             txtBotoxDetails.Text = row.Field<string>("BotoxDetails");
             chkFaceMetals.IsChecked = row.Field<bool?>("HasFaceMetals") ?? false;
-            txtFaceMetalsLocation.Text = row.Field<string>("FaceMetalsLocation");
+            txtFaceMetalDetails.Text = row.Field<string>("FaceMetalDetails");
             chkConsentSigned.IsChecked = row.Field<bool?>("ConsentSigned") ?? false;
             dpConsentDate.SelectedDate = row.Field<DateTime?>("ConsentDate");
         }
@@ -334,7 +337,7 @@ namespace TonyaRFApp
                         HasBotox = @HasBotox,
                         BotoxDetails = @BotoxDetails,
                         HasFaceMetals = @HasFaceMetals,
-                        FaceMetalsLocation = @FaceMetalsLocation,
+                        FaceMetalDetails = @FaceMetalDetails,
                         ConsentSigned = @ConsentSigned,
                         ConsentDate = @ConsentDate
                     WHERE ClientID = @ClientID";
@@ -353,7 +356,7 @@ namespace TonyaRFApp
                 command.Parameters.AddWithValue("@HasBotox", chkBotox.IsChecked == true);
                 command.Parameters.AddWithValue("@BotoxDetails", txtBotoxDetails.Text);
                 command.Parameters.AddWithValue("@HasFaceMetals", chkFaceMetals.IsChecked == true);
-                command.Parameters.AddWithValue("@FaceMetalsLocation", txtFaceMetalsLocation.Text);
+                command.Parameters.AddWithValue("@FaceMetalDetails", txtFaceMetalDetails.Text);
                 command.Parameters.AddWithValue("@ConsentSigned", chkConsentSigned.IsChecked == true);
                 command.Parameters.AddWithValue("@ConsentDate", dpConsentDate.SelectedDate ?? (object)DBNull.Value);
 
@@ -498,7 +501,7 @@ namespace TonyaRFApp
             chkBotox.IsChecked = false;
             txtBotoxDetails.Clear();
             chkFaceMetals.IsChecked = false;
-            txtFaceMetalsLocation.Clear();
+            txtFaceMetalDetails.Clear();
             chkConsentSigned.IsChecked = false;
             dpConsentDate.SelectedDate = null;
 
