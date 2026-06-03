@@ -151,16 +151,54 @@
             <Setter Property="Foreground" Value="{StaticResource TextDarkBrush}"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
+        <!-- Tab Control Style -->
+        <Style TargetType="TabControl">
+            <Setter Property="Background" Value="{StaticResource BackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style TargetType="TabItem">
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{StaticResource TextDarkBrush}"/>
+            <Setter Property="Background" Value="{StaticResource LavanderBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="tabBorder" Background="{TemplateBinding Background}" BorderThickness="0" Padding="{TemplateBinding Padding}" Margin="0,0,3,0" CornerRadius="4,4,0,0">
+                            <ContentPresenter ContentSource="Header"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="tabBorder" Property="Background" Value="{StaticResource PrimaryBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextLightBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="tabBorder" Property="Background" Value="{StaticResource MidLavBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextLightBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         
     </Window.Resources>
-    <Grid>
+    <Grid Background="{StaticResource BackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBlock Text="Tonya RF Client Manager"
-                   FontSize="20"
-                   Margin="10,10,0,10"/>
+        <!-- Title Bar-->
+        <Border Background="{StaticResource DarkBrush}">
+            <TextBlock Text="Tonya RF Client Manager"
+                   FontSize="22"
+                   FontWeight="SemiBold"
+                   Foreground="{StaticResource TextLightBrush}"/>
+        </Border>
         <TabControl Grid.Row="1" Margin="10">
             <TabItem Header="Clients &amp; Appointments">
                 <Grid>
