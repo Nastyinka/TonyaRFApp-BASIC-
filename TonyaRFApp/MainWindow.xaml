@@ -176,10 +176,6 @@
                                 <Setter TargetName="tabBorder" Property="Background" Value="{StaticResource PrimaryBrush}"/>
                                 <Setter Property="Foreground" Value="{StaticResource TextLightBrush}"/>
                             </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="tabBorder" Property="Background" Value="{StaticResource MidLavBrush}"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextLightBrush}"/>
-                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
