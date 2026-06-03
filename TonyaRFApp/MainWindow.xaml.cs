@@ -485,27 +485,76 @@ namespace TonyaRFApp
                 return;
             }
 
-            MessageBoxResult result = MessageBox.Show(
-                "Are you sure you want to delete this client?",
-                "Confirm Delete",
-                MessageBoxButton.YesNo);
-
-            if (result != MessageBoxResult.Yes)
-                return;
-
+            bool hasAppointments = false;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
 
-                string query = "DELETE FROM Clients WHERE ClientID = @ClientID";
-                SqlCommand command = new SqlCommand(query, connection);
+                string checkQuery = @"
+                   SELECT COUNT(*)
+                    FROM Appointments
+                    WHERE ClientID = @ClientID";
+                 SqlCommand checkCommand = new SqlCommand(checkQuery, connection);
+                 checkCommand.Parameters.AddWithValue("@ClientID", selectedClientId);
+                // returns single value
+                 int appointmentCount = (int)checkCommand.ExecuteScalar();
+                 hasAppointments = appointmentCount > 0;
+            }
+            if (hasAppointments)
+            {
+                MessageBoxResult result = MessageBox.Show(
+                    "This client has an existing appointment. \n\n" +
+                    "Click YES to delete the client AND all their appointments. \n" +
+                    "Click NO to cancel.",
+                    "Client Has Appointments",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
 
-                command.Parameters.AddWithValue("@ClientID", selectedClientId);
+                if (result != MessageBoxResult.Yes)     // Delete Appointments first, THEN delete client (Child records deleted first)
+                    return;
 
-                command.ExecuteNonQuery();
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    string deleteAppointments =
+                        "DELETE FROM Appointments WHERE ClientID = @ClientID";
+                    SqlCommand cmd = new SqlCommand(deleteAppointments, connection);
+                    cmd.Parameters.AddWithValue("@ClientID", selectedClientId);
+                    cmd.ExecuteNonQuery();
+
+                    string deleteClient = 
+                        "DELETE FROM Clients WHERE ClientID = @ClientID";
+                    SqlCommand cmd2 = new SqlCommand(deleteClient, connection);
+                    cmd2.Parameters.AddWithValue("@ClientID", selectedClientId);
+                    cmd2.ExecuteNonQuery();
+                }
+
+            }
+            else
+            {
+                // No Appointments, simply delete client - regular confirmation
+
+                MessageBoxResult result = MessageBox.Show(
+                    "Are you sure you want to delete this client?",
+                    "Confirm Delete",
+                    MessageBoxButton.YesNo);
+
+                if (result != MessageBoxResult.Yes)
+                    return;
+
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string query = "DELETE FROM Clients WHERE ClientID = @ClientID";
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@ClientID", selectedClientId);
+                    command.ExecuteNonQuery();
+                }
             }
             LoadClients();
             LoadClientComboBox();
+            LoadAppointments();
 
             txtFirstName.Clear();
             txtSurname.Clear();
