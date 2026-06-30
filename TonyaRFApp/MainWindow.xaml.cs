@@ -28,7 +28,7 @@ namespace TonyaRFApp
         private int selectedClientId = -1;
         private int selectedAppointmentId = -1;
         private int selectedTreatmentId = -1;
-
+        private DateTime currentWeekStart;      // Stores WHICH Monday we are viewing, navigation buttons will know how to react
 
         public MainWindow()
         {
@@ -766,6 +766,140 @@ namespace TonyaRFApp
             MessageBox.Show("Appointment Booked Successfully.");
         }
 
+        // --Calender & Navigation Methods--
+
+        // Keeps the layout consistent
+        private DateTime GetMonday(DateTime date)
+        {
+            // DayofWeek is an enum - Sunday=0 Monday=1... Saturday=6
+            // Need to know how many days to go back to reach Monday
+
+            int diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+
+            return date.AddDays(-1 * diff).Date;
+        }
+
+        private void GenerateWeekGrid(DateTime weekStart)
+        {
+            // To remeber which week is shown, navigation buttons know what to calculate from
+            currentWeekStart = weekStart;
+
+            //Update the label to show the week range
+            DateTime weekEnd = weekStart.AddDays(6);
+            txtWeekLabel.Text = $"{weekStart:d MMM} - {weekEnd:d MMM yyyy}";
+
+            // Clear everything to prevent old cells stacking under new ones
+            weekGrid.Children.Clear();
+            weekGrid.RowDefinitions.Clear();
+            weekGrid.ColumnDefinitions.Clear();
+
+            //Defining columns
+            weekGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(70) }); // Time column
+
+            for (int i = 0; i < 7; i++)
+            {
+                weekGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); //GridUnitType.Star means 'share space equally' like Width="*" in XAML
+            }
+
+            //Defining rows
+
+            weekGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Header row for days of the week
+
+            int totalSlots = 24;
+            for (int i = 0; i < totalSlots; i++)
+            {
+                weekGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(30) });
+            }
+
+            // Building the header row
+
+            Border cornerCell = new Border
+            {
+                Background = (Brush)FindResource("MidLavBrush"),
+                BorderBrush = (Brush)FindResource("BorderBrush"),
+                BorderThickness = new Thickness(0.5)
+            };
+            Grid.SetRow(cornerCell, 0);
+            Grid.SetColumn(cornerCell, 0);
+            weekGrid.Children.Add(cornerCell);
+
+            //one header cell per day
+
+            for (int day = 0; day < 7; day++)
+            {
+                DateTime thisDay = weekStart.AddDays(day);
+
+                Border headerCell = new Border
+                {
+                    Background = (Brush)FindResource("MidLavBrush"),
+                    BorderBrush = (Brush)FindResource("BorderBrush"),
+                    BorderThickness = new Thickness(0.5),
+                    Padding = new Thickness(4)
+                };
+
+                TextBlock headerText = new TextBlock
+                {
+                    Text = thisDay.ToString("ddd\nd MMM"),
+                    TextAlignment = TextAlignment.Center,
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = (Brush)FindResource("TextLightBrush")
+                };
+
+                headerCell.Child = headerText;
+
+                Grid.SetRow(headerCell, 0);
+
+                Grid.SetColumn(headerCell, day + 1); // +1 because first column is time
+
+                weekGrid.Children.Add(headerCell);
+            }
+
+            // Time Labels and Empty Day Cells
+
+            DateTime slotTime = weekStart.Date.AddHours(8);
+
+            for (int row = 0; row < totalSlots; row++)
+            {
+                Border timeCell = new Border
+                {
+                    Background = (Brush)FindResource("BackgroundBrush"),
+                    BorderBrush = (Brush)FindResource("BorderBrush"),
+                    BorderThickness = new Thickness(0.5),
+                    Padding = new Thickness(4, 2, 4, 2)
+                };
+
+                TextBlock timeText = new TextBlock
+                {
+                    Text = slotTime.ToString("HH:mm"),
+                    FontSize = 11,
+                    Foreground = (Brush)FindResource("TextMutedBrush"),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                timeCell.Child = timeText;
+
+                Grid.SetRow(timeCell, row + 1); // +1 because first row is header
+                Grid.SetColumn(timeCell, 0);
+
+                for (int day = 0; day < 7; day++)
+                {
+                    Border dayCell = new Border
+                    {
+                        Background = (Brush)FindResource("SurfaceBrush"),
+                        BorderBrush = (Brush)FindResource("BorderBrush"),
+                        BorderThickness = new Thickness(0.5)
+                    };
+
+                    Grid.SetRow(dayCell, row + 1);
+                    Grid.SetColumn(dayCell, day + 1); // +1 because first column is time
+
+                    weekGrid.Children.Add(dayCell);
+                }
+
+                slotTime = slotTime.AddMinutes(30); // Increment by 30 minutes
+            }
+
+        }
         private void PreviousWeek_Click(object sender, RoutedEventArgs e)
         {
 
