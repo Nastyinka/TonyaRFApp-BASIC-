@@ -218,7 +218,7 @@
                                 <TextBox x:Name="txtAddress" Width="220" Margin="0,0,10,0" Height="30" Style="{StaticResource PlaceholderStyle}" Tag="Address"/>
                             </WrapPanel>
                         </TabItem>
-<!-- Medical Content Tab-->
+                        <!-- Medical Content Tab-->
                         <TabItem Header="Medical &amp; Consent">
                             <Grid Margin="5,8,5,8">
                                 <Grid.ColumnDefinitions>
@@ -279,7 +279,7 @@
                                 <TextBlock Text="Appointment Date" FontSize="10" Foreground="Gray"/>
                                 <DatePicker x:Name="dpAppointmentDate" Width="150" Height="28"/>
                             </StackPanel>
-                            
+
                             <ComboBox x:Name="cbAppointmentTime" Width="100" Height="30" Margin="0,0,10,0"/>
                             <TextBox x:Name="txtAppointmentNotes" Width="200" Height="30" Margin="0,0,10,0" Style="{StaticResource PlaceholderStyle}" Tag="Appointment Notes"/>
 
@@ -342,7 +342,7 @@
                         <Button Content="Add Treatment" Width="130" Height="30" Click="AddTreatment_Click"/>
                         <Button Content="Update Treatment" Width="130" Height="30" Margin="10,0,0,0" Click="UpdateTreatment_Click"/>
                         <Button Content="Delete Treatment" Width="130" Height="30" Margin="10,0,0,0" Click="DeleteTreatment_Click"/>
-                        
+
                     </StackPanel>
                     <DataGrid x:Name="dgTreatments" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionChanged="dgTreatments_SelectionChanged">
                         <DataGrid.Columns>
@@ -353,6 +353,35 @@
                     </DataGrid>
                 </Grid>
             </TabItem>
+
+            <!-- Calander -->
+            
+            <TabItem Header="Calendar">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,10,0,10" VerticalAlignment="Center">
+                        <Button Content="&lt; Previous Week" Width="120" Height="35" Margin="0,0,8,0" Click="PreviousWeek_Click"/>
+                        <Button Content="Today" Width="70" Height="35" Margin="0,0,8,0" Click="GoToToday_Click"/>
+                        <Button Content="Next Week &gt;" Width="120" Height="35" Margin="0,0,20,0" Click="NextWeek_Click"/>
+                        
+                        <TextBlock x:Name="txtWeekLabel" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource DarkBrush}"/>
+                        
+                    </StackPanel>
+                    
+                    <!-- Scroll view and grid placeholder -->
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <Grid x:Name="weekGrid" Background="{StaticResource SurfaceBrush}">
+                            
+                        </Grid>
+                        
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+            
         </TabControl>
     </Grid>
 </Window>

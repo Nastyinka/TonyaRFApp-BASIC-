@@ -766,6 +766,23 @@ namespace TonyaRFApp
             MessageBox.Show("Appointment Booked Successfully.");
         }
 
-       
+        private void PreviousWeek_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void NextWeek_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void GoToToday_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+        
+
     }
+
+
 }
