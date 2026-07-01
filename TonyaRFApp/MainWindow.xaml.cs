@@ -171,7 +171,7 @@ namespace TonyaRFApp
                 SqlCommand command = new SqlCommand(query, connection);
                 command.Parameters.AddWithValue("@FirstName", txtFirstName.Text);
                 command.Parameters.AddWithValue("@Surname", txtSurname.Text);
-                command.Parameters.AddWithValue("@DOB", dpDOB.SelectedDate ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@DOB", dpDOB.SelectedDate.HasValue ? (object)dpDOB.SelectedDate.Value.Date : DBNull.Value);
                 command.Parameters.AddWithValue("@Address", txtAddress.Text);
                 command.Parameters.AddWithValue("@Phone", txtPhone.Text);
                 command.Parameters.AddWithValue("@HasAllergies", chkAllergies.IsChecked == true);
@@ -183,7 +183,7 @@ namespace TonyaRFApp
                 command.Parameters.AddWithValue("@HasFaceMetals", chkFaceMetals.IsChecked == true);
                 command.Parameters.AddWithValue("@FaceMetalDetails", txtFaceMetalDetails.Text);
                 command.Parameters.AddWithValue("@ConsentSigned", chkConsentSigned.IsChecked == true);
-                command.Parameters.AddWithValue("@ConsentDate", dpConsentDate.SelectedDate ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@ConsentDate", dpConsentDate.SelectedDate.HasValue ? (object)dpConsentDate.SelectedDate.Value.Date : DBNull.Value);
 
                 command.ExecuteNonQuery();
             }
@@ -330,6 +330,22 @@ namespace TonyaRFApp
             txtPrice.Text = row.Field<decimal>("Price").ToString();
             txtDurationMinutes.Text = row.Field<int?>("DurationMinutes")?.ToString() ?? "";
         }
+
+        // Fixing the time showing for dob and consent date
+        private void dgClients_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
+        {
+            if (e.PropertyName == "DOB" || e.PropertyName == "ConsentDate")
+            {
+                var column = e.Column as DataGridTextColumn;
+                if (column != null)
+                {
+                    column.Binding = new System.Windows.Data.Binding(e.PropertyName)
+                    {
+                        StringFormat = "dd/MM/yyyy"
+                    };
+                }
+            }
+        }
         private void UpdateClient_Click(object sender, RoutedEventArgs e) // Update client info method
         {
             if (selectedClientId == -1)
@@ -365,7 +381,7 @@ namespace TonyaRFApp
 
                 command.Parameters.AddWithValue("@FirstName", txtFirstName.Text);
                 command.Parameters.AddWithValue("@Surname", txtSurname.Text);
-                command.Parameters.AddWithValue("@DOB", dpDOB.SelectedDate ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@DOB", dpDOB.SelectedDate.HasValue ? (object)dpDOB.SelectedDate.Value.Date : DBNull.Value);
                 command.Parameters.AddWithValue("@Address", txtAddress.Text);
                 command.Parameters.AddWithValue("@Phone", txtPhone.Text);
                 command.Parameters.AddWithValue("@HasAllergies", chkAllergies.IsChecked == true);
@@ -377,7 +393,7 @@ namespace TonyaRFApp
                 command.Parameters.AddWithValue("@HasFaceMetals", chkFaceMetals.IsChecked == true);
                 command.Parameters.AddWithValue("@FaceMetalDetails", txtFaceMetalDetails.Text);
                 command.Parameters.AddWithValue("@ConsentSigned", chkConsentSigned.IsChecked == true);
-                command.Parameters.AddWithValue("@ConsentDate", dpConsentDate.SelectedDate ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@ConsentDate", dpConsentDate.SelectedDate.HasValue ? (object)dpConsentDate.SelectedDate.Value.Date : DBNull.Value);
 
                 command.Parameters.AddWithValue("@ClientID", selectedClientId);
 
@@ -1009,6 +1025,13 @@ namespace TonyaRFApp
                         FontWeight = FontWeights.SemiBold,
                         TextWrapping = TextWrapping.Wrap,       // Ensures text wraps within the block, doesnt get cut off
                         VerticalAlignment = VerticalAlignment.Top,
+                        TextTrimming = TextTrimming.CharacterEllipsis  // Adds "..." if text is too long for the block
+                    };
+
+                    //tooltip shows full details when hovering over the booking block
+                    bookingBlock.ToolTip = new ToolTip
+                    {
+                        Content = $"{appt.ClientName}\n + {appt.TreatmentName}\n + {appt.DurationMinutes} mins" + (string.IsNullOrEmpty(appt.Notes) ? "" : $"\nNotes: {appt.Notes}")
                     };
 
                     bookingBlock.Child = bookingText;

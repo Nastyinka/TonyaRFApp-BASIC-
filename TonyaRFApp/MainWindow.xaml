@@ -309,7 +309,8 @@
                       Height="160"
                       AutoGenerateColumns="True"
                       IsReadOnly="True"
-                      SelectionChanged="dgClients_SelectionChanged"/>
+                      SelectionChanged="dgClients_SelectionChanged"
+                      AutoGeneratingColumn="dgClients_AutoGeneratingColumn"/>
                         <TextBlock Text="Appointments" FontSize="18" Margin="0,12,0,4"/>
                         <DataGrid x:Name="dgAppointments"
                       Height="160"
