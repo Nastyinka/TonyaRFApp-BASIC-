@@ -39,6 +39,7 @@ namespace TonyaRFApp
             LoadAppointments();
             LoadTreatments();
             LoadTimeSlots();
+            GenerateWeekGrid(GetMonday(DateTime.Today));
         }
         private void LoadClients()              
         {
@@ -427,6 +428,7 @@ namespace TonyaRFApp
             }
 
             LoadAppointments();
+            GenerateWeekGrid(currentWeekStart); // Refresh the week grid to reflect changes
 
             MessageBox.Show("Appointment Updated Successfully");
         }
@@ -660,7 +662,7 @@ namespace TonyaRFApp
             //Loop every hour and ever 5 min intervals
             for (int hour = 0; hour < 24; hour++)
             {
-                for (int minute = 0; minute < 60; minute += 5)
+                for (int minute = 0; minute < 60; minute += 30)
                 {
                     times.Add($"{hour:D2}:{minute:D2}");
                 }
@@ -762,6 +764,7 @@ namespace TonyaRFApp
                 command.ExecuteNonQuery();
             }
             LoadAppointments();
+            GenerateWeekGrid(currentWeekStart); // Refresh the week grid to reflect new appointment
 
             MessageBox.Show("Appointment Booked Successfully.");
         }
@@ -862,7 +865,7 @@ namespace TonyaRFApp
             {
                 Border timeCell = new Border
                 {
-                    Background = (Brush)FindResource("BackgroundBrush"),
+                    Background = (Brush)FindResource("LavanderBrush"),
                     BorderBrush = (Brush)FindResource("BorderBrush"),
                     BorderThickness = new Thickness(0.5),
                     Padding = new Thickness(4, 2, 4, 2)
@@ -871,15 +874,19 @@ namespace TonyaRFApp
                 TextBlock timeText = new TextBlock
                 {
                     Text = slotTime.ToString("HH:mm"),
-                    FontSize = 11,
-                    Foreground = (Brush)FindResource("TextMutedBrush"),
-                    VerticalAlignment = VerticalAlignment.Center
+                    FontSize = 12,
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = (Brush)FindResource("TextDarkBrush"),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    HorizontalAlignment = HorizontalAlignment.Center
                 };
 
                 timeCell.Child = timeText;
 
                 Grid.SetRow(timeCell, row + 1); // +1 because first row is header
                 Grid.SetColumn(timeCell, 0);
+
+                weekGrid.Children.Add(timeCell); // Adds the timecell to grid
 
                 for (int day = 0; day < 7; day++)
                 {
@@ -893,25 +900,147 @@ namespace TonyaRFApp
                     Grid.SetRow(dayCell, row + 1);
                     Grid.SetColumn(dayCell, day + 1); // +1 because first column is time
 
-                    weekGrid.Children.Add(dayCell);
+                    weekGrid.Children.Add(dayCell); // adds the daycell to grid
                 }
 
                 slotTime = slotTime.AddMinutes(30); // Increment by 30 minutes
             }
 
+            LoadWeekAppointments(weekStart);
         }
+
+        // -- Load Appointments into the Week Grid --
+
+        private void LoadWeekAppointments(DateTime weekStart)
+        {
+            DateTime weekEnd = weekStart.AddDays(7);
+            //query up to but not including the day AFTER sunday
+
+            var appointments = new Dictionary<string, AppointmentInfo>();
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                string query = @"
+                    SELECT
+                        a.AppointmentDate,
+                        a.AppointmentTime,
+                        c.FirstName + ' ' + c.Surname AS ClientName,
+                        t.TreatmentName,
+                        ISNULL(t.DurationMinutes, 30) AS DurationMinutes, 
+                        a.Notes
+                    FROM Appointments a
+                    JOIN Clients c ON a.ClientID = c.ClientID
+                    JOIN Treatments t ON a.TreatmentID = t.TreatmentID
+                    WHERE a.AppointmentDate >= @WeekStart AND a.AppointmentDate < @WeekEnd
+                    ORDER BY a.AppointmentDate, a.AppointmentTime";
+
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@WeekStart", weekStart.Date);
+                command.Parameters.AddWithValue("@WeekEnd", weekEnd.Date);
+
+                SqlDataReader reader = command.ExecuteReader(); //reads one row at a time, more efficient than loading all into memory
+
+                while (reader.Read())
+                {
+                    DateTime apptDate = reader.GetDateTime(0);
+                    TimeSpan apptTime = reader.GetTimeSpan(1);
+
+                    //lookup for key from date n time
+                    string key = $"{apptDate:yyyy-MM-dd}-{apptTime:hh\\:mm}";
+
+                    appointments[key] = new AppointmentInfo
+                    {
+                        ClientName = reader.GetString(2),
+                        TreatmentName = reader.GetString(3),
+                        DurationMinutes = reader.GetInt32(4),
+                        Notes = reader.IsDBNull(5) ? "" : reader.GetString(5)
+                    };
+
+                    // reader.DBNULL checks if notes is empty in db, using empty string to prevent crashing
+                }
+            }
+
+            for (int day = 0; day < 7; day++)
+            {
+                DateTime thisDay = weekStart.AddDays(day);
+                int col = day + 1; // +1 because first column is time, so days start at column 1
+
+                for (int slot = 0; slot < 24; slot++)
+                {
+                    //working out what time this slot represents
+                    TimeSpan slotTime = TimeSpan.FromHours(8) + TimeSpan.FromMinutes(slot * 30); // 8:00 + 0, 30, 60, 90... minutes
+
+                    // same key used in storing
+                    string key = $"{thisDay:yyyy-MM-dd}-{slotTime:hh\\:mm}";
+
+                    //checking if there is an app at this day n time
+                    if (!appointments.ContainsKey(key))
+                        continue; //no booking = skip next slot
+
+                    AppointmentInfo appt = appointments[key];
+
+                    //Calculating how many rows the booking spans, math ceiling rounding up and math max ensuring at least 1 row
+
+                    int rowSpan = Math.Max(1, (int)Math.Ceiling(appt.DurationMinutes / 30.0));
+
+                    int gridRow = slot + 1; // +1 because first row is header
+
+                    // Building the booking block
+
+                    Border bookingBlock = new Border
+                    {
+                        Background = (Brush)FindResource("PrimaryBrush"),
+                        BorderBrush = (Brush)FindResource("DarkBrush"),
+                        BorderThickness = new Thickness(1),
+                        CornerRadius = new CornerRadius(4),
+                        Padding = new Thickness(4, 2, 4, 2),
+                        Margin = new Thickness(1)
+                    };
+
+                    //Building the text inside the booking block
+
+                    TextBlock bookingText = new TextBlock
+                    {
+                        Text = $"{appt.ClientName}\n{appt.TreatmentName}",
+                        Foreground = (Brush)FindResource("TextLightBrush"),
+                        FontSize = 11,
+                        FontWeight = FontWeights.SemiBold,
+                        TextWrapping = TextWrapping.Wrap,       // Ensures text wraps within the block, doesnt get cut off
+                        VerticalAlignment = VerticalAlignment.Top,
+                    };
+
+                    bookingBlock.Child = bookingText;
+
+                    //positioning the block in the grid
+
+                    Grid.SetRow(bookingBlock, gridRow);
+                    Grid.SetColumn(bookingBlock, col);
+                    Grid.SetRowSpan(bookingBlock, rowSpan);
+                    //setrowspan ensures the block spans multiple rows if the appointment is longer than 30 minutes
+
+                    //booking block MUST be added to the grid AFTER the empty cells are created, otherwise it will be hidden behind them
+
+                    weekGrid.Children.Add(bookingBlock);
+
+                }
+            }
+        }
+        //Buttons
         private void PreviousWeek_Click(object sender, RoutedEventArgs e)
         {
-
+            GenerateWeekGrid(currentWeekStart.AddDays(-7));
         }
 
         private void NextWeek_Click(object sender, RoutedEventArgs e)
         {
-
+            GenerateWeekGrid(currentWeekStart.AddDays(7));
         }
 
         private void GoToToday_Click(object sender, RoutedEventArgs e)
         {
+            GenerateWeekGrid(GetMonday(DateTime.Today));
 
         }
         
