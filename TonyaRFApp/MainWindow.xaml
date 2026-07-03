@@ -372,14 +372,63 @@
                         
                     </StackPanel>
                     
-                    <!-- Scroll view and grid placeholder -->
+                    <!-- Scroll view and side panel -->
 
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                        <Grid x:Name="weekGrid" Background="{StaticResource SurfaceBrush}">
-                            
-                        </Grid>
-                        
-                    </ScrollViewer>
+                    <Grid Grid.Row="1">
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <Grid x:Name="weekGrid" Background="{StaticResource SurfaceBrush}"/>
+                        </ScrollViewer>
+
+                        <Border x:Name="sidePanel" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Stretch" Width="280" Background="{StaticResource BackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+                            <Grid Margin="12">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- Header -->
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- date/time -->
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- client label -->
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- client combo -->
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- treatment label -->
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- treatment combo -->
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- notes label -->
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- notes textbox -->
+                                    <RowDefinition Height="*"/>
+                                    <!-- spacer -->
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- buttons -->
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0" Margin="0,0,0,12">
+                                    <TextBlock Text="Book Appointment" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource DarkBrush}"/>
+
+
+                                    <Button Content="✕" HorizontalAlignment="Right" Width="28" Height="28" Background="Transparent" Foreground="{StaticResource TextMutedBrush}" BorderThickness="0" FontSize="14" Click="CloseSidePanel_Click"/>
+                                </Grid>
+
+                                <Border Grid.Row="1" Background="{StaticResource LavanderBrush}" CornerRadius="4" Padding="8,6" Margin="0,0,0,12">
+                                    <TextBlock x:Name="txtPanelDateTime" FontWeight="SemiBold" Foreground="{StaticResource DarkBrush}" FontSize="13"/>
+                                </Border>
+
+                                <TextBlock Grid.Row="2" Text="Client" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,3"/>
+                                <ComboBox x:Name="cbPanelClients" Grid.Row="3" Height="30" Margin="0,0,0,10"/>
+
+                                <TextBlock Grid.Row="4" Text="Treatment" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,3"/>
+                                <ComboBox x:Name="cbPanelTreatments" Grid.Row="5" Height="30" Margin="0,0,0,10"/>
+
+                                <TextBlock Grid.Row="6" Text="Notes" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,3"/>
+                                <TextBox x:Name="txtPanelNotes" Grid.Row="7" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Style="{StaticResource PlaceholderStyle}" Tag="Optional Notes..." Margin="0,0,0,10"/>
+
+                                <Button x:Name="btnPanelBook" Grid.Row="9" Content="Book Appointment" Height="34" Click="PanelBookAppointment_Click"/>
+                            </Grid>
+                        </Border>
+
+                    </Grid>
                 </Grid>
             </TabItem>
             

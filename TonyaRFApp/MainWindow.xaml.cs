@@ -29,7 +29,8 @@ namespace TonyaRFApp
         private int selectedAppointmentId = -1;
         private int selectedTreatmentId = -1;
         private DateTime currentWeekStart;      // Stores WHICH Monday we are viewing, navigation buttons will know how to react
-
+        private DateTime selectedCalendarDate; // will store which date and time was clicked
+        private TimeSpan selectedCalendarTime;
         public MainWindow()
         {
             InitializeComponent();
@@ -708,6 +709,10 @@ namespace TonyaRFApp
                 cbClients.DisplayMemberPath = "FullName";
 
                 cbClients.SelectedValuePath = "ClientID";
+
+                cbPanelClients.ItemsSource = table.DefaultView;
+                cbPanelClients.DisplayMemberPath = "FullName";
+                cbPanelClients.SelectedValuePath = "ClientID";
             }
         }
 
@@ -734,6 +739,10 @@ namespace TonyaRFApp
                 cbTreatments.DisplayMemberPath = "TreatmentName";
 
                 cbTreatments.SelectedValuePath = "TreatmentID";
+
+                cbPanelTreatments.ItemsSource = table.DefaultView;
+                cbPanelTreatments.DisplayMemberPath = "TreatmentName";
+                cbPanelTreatments.SelectedValuePath = "TreatmentID";
             }
         }
         
@@ -920,6 +929,17 @@ namespace TonyaRFApp
                         Cursor = Cursors.Hand // signals that the cell is clickable
                     };
 
+                    //highlight on hover
+                    dayCell.MouseEnter += (s, e) =>
+                    {
+                        dayCell.Background = (Brush)FindResource("LavanderBrush");
+                    };
+
+                    dayCell.MouseLeave += (s, e) =>
+                    {
+                        dayCell.Background = (Brush)FindResource("SurfaceBrush");
+                    };
+
                     //wiring the click even with a lambda
                     dayCell.MouseLeftButtonUp += (sender, e) =>
                     {
@@ -1084,19 +1104,86 @@ namespace TonyaRFApp
 
         private void CalendarCell_Clicked(DateTime date, TimeSpan time)
         {
-            mainTabControl.SelectedIndex = 0; // Switch to the first tab (Appointments)
+            selectedCalendarDate = date; //store clicked date and time
+            selectedCalendarTime = time;
 
-            //prefilling the date
-            dpAppointmentDate.SelectedDate = date;
+            // Update the date/time label in the panel
+            txtPanelDateTime.Text = $"{date:dddd d MMM  yyyy}\nat {time:hh\\:mm}";
 
-            string timeString = time.ToString(@"hh\:mm");
-            cbAppointmentTime.SelectedItem = timeString;
+            cbPanelClients.SelectedValue = 10;
 
-            cbClients.Focus(); // Focus on the client combo box for user convenience
+            cbPanelTreatments.SelectedIndex = -1;
+            txtPanelNotes.Clear();
 
-            BookAppointmentButton.Focus(); // Focus on the book appointment button for user convenience
+            sidePanel.Visibility = Visibility.Visible; // Show the side panel
+
         }
         
+        private void CloseSidePanel_Click(object sender, RoutedEventArgs e)
+        {
+            sidePanel.Visibility = Visibility.Collapsed; // Hide the side panel
+        }
+
+        private void PanelBookAppointment_Click(object sender, RoutedEventArgs e)
+        {
+            // Validate that a client and treatment are selected
+
+            if (cbPanelClients.SelectedValue == null)
+            {
+                MessageBox.Show("Please select a client.");
+                return; 
+            }
+            if (cbPanelTreatments.SelectedValue == null)
+            {
+                MessageBox.Show("Please select a treatment.");
+                return;
+            }
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                string query = @"
+                    INSERT INTO Appointments
+                        (
+                            ClientID,
+                            TreatmentID,
+                            AppointmentDate,
+                            AppointmentTime,
+                            Notes
+                         )
+                    VALUES
+                        (
+                            @ClientID,
+                            @TreatmentID,
+                            @AppointmentDate,
+                            @AppointmentTime,
+                            @Notes
+                        )";
+
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@ClientID", cbPanelClients.SelectedValue);
+                command.Parameters.AddWithValue("@TreatmentID", cbPanelTreatments.SelectedValue);
+                command.Parameters.AddWithValue("@AppointmentDate", selectedCalendarDate.Date);
+
+                var p = command.Parameters.Add("@AppointmentTime", SqlDbType.Time);
+                p.Value = selectedCalendarTime;
+
+                command.Parameters.AddWithValue("@Notes", txtPanelNotes.Text);
+
+                command.ExecuteNonQuery();
+            }
+
+            //refresh everything
+            LoadAppointments();
+            LoadClientComboBox();
+            GenerateWeekGrid(currentWeekStart);
+
+            // close panel
+            sidePanel.Visibility = Visibility.Collapsed;
+
+            MessageBox.Show("Appointment Booked Successfully.");
+        }
 
     }
 
