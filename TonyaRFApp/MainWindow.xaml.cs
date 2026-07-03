@@ -906,11 +906,24 @@ namespace TonyaRFApp
 
                 for (int day = 0; day < 7; day++)
                 {
+                    DateTime thisDay = weekStart.AddDays(day);
+                    // capturing specific DAY and TIME for lambda expressions, otherwise they will all reference the last value of the loop
+                    DateTime capturedDay = weekStart.AddDays(day);
+                    TimeSpan capturedTime = TimeSpan.FromHours(8) + TimeSpan.FromMinutes(row * 30);
+
+
                     Border dayCell = new Border
                     {
                         Background = (Brush)FindResource("SurfaceBrush"),
                         BorderBrush = (Brush)FindResource("BorderBrush"),
-                        BorderThickness = new Thickness(0.5)
+                        BorderThickness = new Thickness(0.5),
+                        Cursor = Cursors.Hand // signals that the cell is clickable
+                    };
+
+                    //wiring the click even with a lambda
+                    dayCell.MouseLeftButtonUp += (sender, e) =>
+                    {
+                        CalendarCell_Clicked(capturedDay, capturedTime);
                     };
 
                     Grid.SetRow(dayCell, row + 1);
@@ -1047,6 +1060,8 @@ namespace TonyaRFApp
 
                     weekGrid.Children.Add(bookingBlock);
 
+                    bookingBlock.IsHitTestVisible = false; // Ensures the booking block does not intercept mouse clicks, allowing the underlying cell to be clicked instead
+
                 }
             }
         }
@@ -1065,6 +1080,21 @@ namespace TonyaRFApp
         {
             GenerateWeekGrid(GetMonday(DateTime.Today));
 
+        }
+
+        private void CalendarCell_Clicked(DateTime date, TimeSpan time)
+        {
+            mainTabControl.SelectedIndex = 0; // Switch to the first tab (Appointments)
+
+            //prefilling the date
+            dpAppointmentDate.SelectedDate = date;
+
+            string timeString = time.ToString(@"hh\:mm");
+            cbAppointmentTime.SelectedItem = timeString;
+
+            cbClients.Focus(); // Focus on the client combo box for user convenience
+
+            BookAppointmentButton.Focus(); // Focus on the book appointment button for user convenience
         }
         
 

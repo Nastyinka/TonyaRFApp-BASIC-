@@ -195,7 +195,7 @@
                    FontWeight="SemiBold"
                    Foreground="{StaticResource TextLightBrush}"/>
         </Border>
-        <TabControl Grid.Row="1" Margin="10">
+        <TabControl x:Name="mainTabControl" Grid.Row="1" Margin="10">
             <TabItem Header="Clients &amp; Appointments">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -283,7 +283,7 @@
                             <ComboBox x:Name="cbAppointmentTime" Width="100" Height="30" Margin="0,0,10,0"/>
                             <TextBox x:Name="txtAppointmentNotes" Width="200" Height="30" Margin="0,0,10,0" Style="{StaticResource PlaceholderStyle}" Tag="Appointment Notes"/>
 
-                            <Button Content="Book Appointment"
+                            <Button x:Name="BookAppointmentButton" Content="Book Appointment"
                         Width="150"
                         Height="30"
                  Click="BookAppointment_Click"/>
