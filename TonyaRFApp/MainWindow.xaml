@@ -424,7 +424,19 @@
                                 <TextBlock Grid.Row="6" Text="Notes" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,3"/>
                                 <TextBox x:Name="txtPanelNotes" Grid.Row="7" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Style="{StaticResource PlaceholderStyle}" Tag="Optional Notes..." Margin="0,0,0,10"/>
 
-                                <Button x:Name="btnPanelBook" Grid.Row="9" Content="Book Appointment" Height="34" Click="PanelBookAppointment_Click"/>
+                                <Button x:Name="btnPanelBook" Grid.Row="9" Content="Book Appointment" Height="34" Margin="0,0,0,8" Visibility="Collapsed" Click="PanelBookAppointment_Click"/>
+
+                                <Grid Grid.Row="9" x:Name="pnlEditButtons" Visibility="Collapsed">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Grid.Column="0" Content="Update" Height="34" Click="PanelUpdateAppointment_Click"/>
+                                    
+                                    <Button Grid.Column="2" Content="Delete" Height="34" Background="{StaticResource DarkBrush}" Click="PanelDeleteAppointment_Click"/>
+                                </Grid>
                             </Grid>
                         </Border>
 

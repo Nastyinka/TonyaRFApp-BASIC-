@@ -31,6 +31,10 @@ namespace TonyaRFApp
         private DateTime currentWeekStart;      // Stores WHICH Monday we are viewing, navigation buttons will know how to react
         private DateTime selectedCalendarDate; // will store which date and time was clicked
         private TimeSpan selectedCalendarTime;
+        private int selectedCalendarAppointmentId = -1; // will store which appointment was clicked on the calendar -> -1 means none selected
+
+        private enum PanelMode { Book, Edit } //named set of states -- enum instead of bool
+        private PanelMode currentPanelMode;
         public MainWindow()
         {
             InitializeComponent();
@@ -973,8 +977,11 @@ namespace TonyaRFApp
 
                 string query = @"
                     SELECT
+                        a.AppointmentsID,
                         a.AppointmentDate,
                         a.AppointmentTime,
+                        a.ClientID,
+                        a.TreatmentID,
                         c.FirstName + ' ' + c.Surname AS ClientName,
                         t.TreatmentName,
                         ISNULL(t.DurationMinutes, 30) AS DurationMinutes, 
@@ -993,18 +1000,24 @@ namespace TonyaRFApp
 
                 while (reader.Read())
                 {
-                    DateTime apptDate = reader.GetDateTime(0);
-                    TimeSpan apptTime = reader.GetTimeSpan(1);
+                    int appointmentId = reader.GetInt32(0);
+                    DateTime apptDate = reader.GetDateTime(1);
+                    TimeSpan apptTime = reader.GetTimeSpan(2);
+                    int clientId = reader.GetInt32(3);
+                    int treatmentId = reader.GetInt32(4);
 
                     //lookup for key from date n time
                     string key = $"{apptDate:yyyy-MM-dd}-{apptTime:hh\\:mm}";
 
                     appointments[key] = new AppointmentInfo
                     {
-                        ClientName = reader.GetString(2),
-                        TreatmentName = reader.GetString(3),
-                        DurationMinutes = reader.GetInt32(4),
-                        Notes = reader.IsDBNull(5) ? "" : reader.GetString(5)
+                        AppointmentId = appointmentId,
+                        ClientId = clientId,
+                        TreatmentId = treatmentId,
+                        ClientName = reader.GetString(5),
+                        TreatmentName = reader.GetString(6),
+                        DurationMinutes = reader.GetInt32(7),
+                        Notes = reader.IsDBNull(8) ? "" : reader.GetString(8)
                     };
 
                     // reader.DBNULL checks if notes is empty in db, using empty string to prevent crashing
@@ -1080,8 +1093,27 @@ namespace TonyaRFApp
 
                     weekGrid.Children.Add(bookingBlock);
 
-                    bookingBlock.IsHitTestVisible = false; // Ensures the booking block does not intercept mouse clicks, allowing the underlying cell to be clicked instead
+                    // OLD VER -- bookingBlock.IsHitTestVisible = false; Ensures the booking block does not intercept mouse clicks, allowing the underlying cell to be clicked instead 
+                    AppointmentInfo capturedAppt = appt; // Capture the appointment for the lambda
+                    DateTime capturedDay = thisDay; // Capture the day for the lambda
+                    TimeSpan capturedTime = slotTime; // Capture the time for the lambda
 
+                    bookingBlock.Cursor = Cursors.Hand; // Change cursor to hand to indicate it's clickable
+                    bookingBlock.MouseEnter += (s, e) =>
+                    {
+                        bookingBlock.Background = (Brush)FindResource("DarkBrush");
+                    };
+                    bookingBlock.MouseLeave += (s, e) =>
+                    {
+                        // Reset the background color when the mouse leaves
+                        bookingBlock.Background = (Brush)FindResource("PrimaryBrush");
+                    };
+                    bookingBlock.MouseLeftButtonUp += (s, e) =>
+                    {
+                        // Stop click from reaching cell underneath - day cell
+                        e.Handled = true;
+                        CalendarBooking_Clicked(capturedAppt, capturedDay, capturedTime);
+                    };
                 }
             }
         }
@@ -1106,19 +1138,125 @@ namespace TonyaRFApp
         {
             selectedCalendarDate = date; //store clicked date and time
             selectedCalendarTime = time;
+            selectedCalendarAppointmentId = -1; // clear any previous edit selection
 
             // Update the date/time label in the panel
             txtPanelDateTime.Text = $"{date:dddd d MMM  yyyy}\nat {time:hh\\:mm}";
 
-            cbPanelClients.SelectedValue = 10;
+            cbPanelClients.SelectedValue = 10; //walk-in default
 
             cbPanelTreatments.SelectedIndex = -1;
             txtPanelNotes.Clear();
+
+            SetPanelMode(PanelMode.Book); // Set the panel to booking mode
 
             sidePanel.Visibility = Visibility.Visible; // Show the side panel
 
         }
         
+        private void CalendarBooking_Clicked(AppointmentInfo appt, DateTime date, TimeSpan time)
+        {
+            // store which appt im editing
+            selectedCalendarAppointmentId = appt.AppointmentId;
+            selectedCalendarDate = date;
+            selectedCalendarTime = time;
+
+            // Updating the header label
+            txtPanelDateTime.Text = $"{date:ddd d MMM yyyy}\nat {time:hh\\:mm}";
+
+            // Pre filling the comboboxes with existing values
+            // SelectedValue matches by ClientID/TreatmentID
+            cbPanelClients.SelectedValue = appt.ClientId;
+            cbPanelTreatments.SelectedValue = appt.TreatmentId;
+            txtPanelNotes.Text = appt.Notes;
+
+            SetPanelMode(PanelMode.Edit); // Set the panel to edit mode
+            sidePanel.Visibility = Visibility.Visible;
+        }
+        private void PanelDeleteAppointment_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBoxResult result = MessageBox.Show("Are you sure you want to delete this appointment?", "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                    string query =
+                        "DELETE FROM Appointments WHERE AppointmentsID = @AppointmentsID";
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@AppointmentsID", selectedCalendarAppointmentId);
+                command.ExecuteNonQuery();
+            }
+            LoadAppointments();
+            GenerateWeekGrid(currentWeekStart);
+            sidePanel.Visibility = Visibility.Collapsed;
+            selectedCalendarAppointmentId = -1;
+            MessageBox.Show("Appointment deleted successfully");
+        }
+        private void PanelUpdateAppointment_Click(object sender, RoutedEventArgs e)
+        {
+            if (cbPanelClients.SelectedValue == null)
+            {
+                MessageBox.Show("Please select a client.");
+                return;
+            }
+            if (cbPanelTreatments.SelectedValue == null)
+            {
+                MessageBox.Show("Please select a treatment.");
+                return;
+            }
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                string query = @"
+                    UPDATE Appointments
+                    SET
+                        ClientID = @ClientID,
+                        TreatmentID = @TreatmentID,
+                        AppointmentDate = @AppointmentDate,
+                        AppointmentTime = @AppointmentTime,
+                        Notes = @Notes
+                    WHERE AppointmentsID = @AppointmentsID";
+
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@ClientID", cbPanelClients.SelectedValue);
+                command.Parameters.AddWithValue("@TreatmentID", cbPanelTreatments.SelectedValue);
+                command.Parameters.AddWithValue("@AppointmentDate", selectedCalendarDate.Date);
+
+                var p = command.Parameters.Add("@AppointmentTime", SqlDbType.Time);
+                p.Value = selectedCalendarTime;
+
+                command.Parameters.AddWithValue("@Notes", txtPanelNotes.Text);
+                command.Parameters.AddWithValue("@AppointmentsID", selectedCalendarAppointmentId);
+
+                command.ExecuteNonQuery();
+            }
+
+            LoadAppointments();
+            GenerateWeekGrid(currentWeekStart); // Refresh the week grid to reflect changes
+            sidePanel.Visibility = Visibility.Collapsed; // Close the side panel
+            MessageBox.Show("Appointment Updated Successfully.");
+        }
+        private void SetPanelMode(PanelMode mode)
+        {
+            currentPanelMode = mode;
+
+            if (mode == PanelMode.Book)
+            {
+                //show book button hide edit buttons
+                btnPanelBook.Visibility = Visibility.Visible;
+                pnlEditButtons.Visibility = Visibility.Collapsed;
+            }
+            else //edit
+            {
+                btnPanelBook.Visibility = Visibility.Collapsed;
+                pnlEditButtons.Visibility = Visibility.Visible;
+            }
+        }
         private void CloseSidePanel_Click(object sender, RoutedEventArgs e)
         {
             sidePanel.Visibility = Visibility.Collapsed; // Hide the side panel
