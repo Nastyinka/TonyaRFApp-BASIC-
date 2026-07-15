@@ -51,11 +51,37 @@ namespace TonyaRFApp
             using (SqlConnection connection = new SqlConnection(connectionString))  //Create connection
             {
                 connection.Open();
-                string query = "SELECT * FROM Clients";
+                string query = @"SELECT 
+                                    c.ClientID, 
+                                    c.FirstName, 
+                                    c.Surname, 
+                                    c.DOB, 
+                                    c.Address, 
+                                    c.PhoneNumber, 
+                                    c.HasAllergies, 
+                                    c.AllergyDetails, 
+                                    c.HasImplants, 
+                                    c.ImplantDetails, 
+                                    c.HasBotox, 
+                                    c.BotoxDetails, 
+                                    c.HasFaceMetals, 
+                                    c.FaceMetalDetails, 
+                                    c.ConsentSigned, 
+                                    c.ConsentDate,
+                                    COUNT(a.AppointmentsID) AS TotalAppointments
+                            FROM Clients c
+                            LEFT JOIN Appointments a ON c.ClientID = a.ClientID
+                            GROUP BY
+                                    c.ClientID, c.FirstName, c.Surname, c.DOB, c.Address, c.PhoneNumber, c.HasAllergies, c.AllergyDetails, c.HasImplants, c.ImplantDetails, c.HasBotox, c.BotoxDetails, c.HasFaceMetals,
+                                    c.FaceMetalDetails, c.ConsentSigned, c.ConsentDate";
+
                 SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
                 DataTable table = new DataTable();
                 adapter.Fill(table);
+
+                //Feeding both the seclection and records grid
                 dgClients.ItemsSource = table.DefaultView;
+                dgRecordsClients.ItemsSource = table.DefaultView;
             }
         } 
         private void LoadAppointments()
@@ -298,6 +324,9 @@ namespace TonyaRFApp
             txtFaceMetalDetails.Text = row.Field<string>("FaceMetalDetails");
             chkConsentSigned.IsChecked = row.Field<bool?>("ConsentSigned") ?? false;
             dpConsentDate.SelectedDate = row.Field<DateTime?>("ConsentDate");
+
+            int totalAppts = row.Field<int>("TotalAppointments");
+            txtTotalAppointments.Text = $"Total Appointments: {totalAppts}";
         }
         private void dgAppointments_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -1115,6 +1144,50 @@ namespace TonyaRFApp
                         CalendarBooking_Clicked(capturedAppt, capturedDay, capturedTime);
                     };
                 }
+            }
+        }
+
+        //Records selection handler
+        private void dgRecordsClients_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!(dgRecordsClients.SelectedItem is DataRowView drv))
+                return;
+
+            DataRow row = drv.Row;
+            int? clientId = row.Field<int?>("ClientID");
+            if (!clientId.HasValue)
+                return;
+
+            //updating the history label with client name
+            string name = $"{row.Field<string>("FirstName")}" + $"{row.Field<string>("Surname")}";
+            txtAppointmentHistoryLabel.Text = $"Appointment History - {name}";
+
+            //load their appts into lower grid
+            LoadClientAppointments(clientId.Value);
+        }
+        private void LoadClientAppointments(int clientId)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = @"
+                        SELECT
+                            a.AppointmentDate, a.AppointmentTime, t.TreatmentName, t.Price, a.Notes
+                        FROM Appointments a
+                        JOIN Treatments t ON a.TreatmentID = t.TreatmentID
+                        WHERE a.ClientID = @ClientID
+                        ORDER BY
+                            a.AppointmentDate DESC,
+                            a.AppointmentTime DESC";
+                //order by DESC means most recent apps first
+
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@ClientID", clientId);
+
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                DataTable table = new DataTable();
+                adapter.Fill(table);
+                dgClientAppointments.ItemsSource = table.DefaultView;
             }
         }
         //Buttons
