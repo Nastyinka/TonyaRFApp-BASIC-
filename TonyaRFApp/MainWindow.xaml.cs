@@ -718,6 +718,7 @@ namespace TonyaRFApp
                 }
             }
             cbAppointmentTime.ItemsSource = times;
+            cbPanelTime.ItemsSource = times;
         }
         private void LoadClientComboBox()               //Client ComboBox Method
         {
@@ -1237,6 +1238,9 @@ namespace TonyaRFApp
             // Updating the header label
             txtPanelDateTime.Text = $"{date:ddd d MMM yyyy}\nat {time:hh\\:mm}";
 
+            dpPanelDate.SelectedDate = date;
+            cbPanelTime.SelectedItem = time.ToString(@"hh\:mm");
+
             // Pre filling the comboboxes with existing values
             // SelectedValue matches by ClientID/TreatmentID
             cbPanelClients.SelectedValue = appt.ClientId;
@@ -1281,6 +1285,18 @@ namespace TonyaRFApp
                 return;
             }
 
+            //Read from editable controls instead of stored fields
+            DateTime? newDate = dpPanelDate.SelectedDate;
+            TimeSpan? newTime = null;
+            if (cbPanelTime.SelectedItem is string t)
+                newTime = TimeSpan.Parse(t);
+
+            if (newDate == null || newTime == null)
+            {
+                MessageBox.Show("Please select a date and time.");
+                return;
+            }
+
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
@@ -1298,10 +1314,10 @@ namespace TonyaRFApp
                 SqlCommand command = new SqlCommand(query, connection);
                 command.Parameters.AddWithValue("@ClientID", cbPanelClients.SelectedValue);
                 command.Parameters.AddWithValue("@TreatmentID", cbPanelTreatments.SelectedValue);
-                command.Parameters.AddWithValue("@AppointmentDate", selectedCalendarDate.Date);
+                command.Parameters.AddWithValue("@AppointmentDate", newDate.Value.Date);
 
                 var p = command.Parameters.Add("@AppointmentTime", SqlDbType.Time);
-                p.Value = selectedCalendarTime;
+                p.Value = newTime.Value;
 
                 command.Parameters.AddWithValue("@Notes", txtPanelNotes.Text);
                 command.Parameters.AddWithValue("@AppointmentsID", selectedCalendarAppointmentId);
@@ -1321,11 +1337,15 @@ namespace TonyaRFApp
             if (mode == PanelMode.Book)
             {
                 //show book button hide edit buttons
+                pnlDateTimeDisplay.Visibility = Visibility.Visible;
+                pnlDateTimeEdit.Visibility = Visibility.Collapsed;
                 btnPanelBook.Visibility = Visibility.Visible;
                 pnlEditButtons.Visibility = Visibility.Collapsed;
             }
             else //edit
             {
+                pnlDateTimeDisplay.Visibility= Visibility.Collapsed;
+                pnlDateTimeEdit.Visibility = Visibility.Visible;
                 btnPanelBook.Visibility = Visibility.Collapsed;
                 pnlEditButtons.Visibility = Visibility.Visible;
             }

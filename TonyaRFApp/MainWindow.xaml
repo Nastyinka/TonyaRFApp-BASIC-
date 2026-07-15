@@ -501,9 +501,16 @@
                                     <Button Content="✕" HorizontalAlignment="Right" Width="28" Height="28" Background="Transparent" Foreground="{StaticResource TextMutedBrush}" BorderThickness="0" FontSize="14" Click="CloseSidePanel_Click"/>
                                 </Grid>
 
-                                <Border Grid.Row="1" Background="{StaticResource LavanderBrush}" CornerRadius="4" Padding="8,6" Margin="0,0,0,12">
+                                <Border x:Name="pnlDateTimeDisplay" Grid.Row="1" Background="{StaticResource LavanderBrush}" CornerRadius="4" Padding="8,6" Margin="0,0,0,12">
                                     <TextBlock x:Name="txtPanelDateTime" FontWeight="SemiBold" Foreground="{StaticResource DarkBrush}" FontSize="13"/>
                                 </Border>
+
+                                <StackPanel x:Name="pnlDateTimeEdit" Grid.Row="1" Margin="0,0,0,12" Visibility="Collapsed">
+                                    <TextBlock Text="Date" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,3"/>
+                                    <DatePicker x:Name="dpPanelDate" Height="30" Margin="0,0,0,8"/>
+                                    <TextBlock Text="Time" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,3"/>
+                                    <ComboBox x:Name="cbPanelTime" Height="30"/>
+                                </StackPanel>
 
                                 <TextBlock Grid.Row="2" Text="Client" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,3"/>
                                 <ComboBox x:Name="cbPanelClients" Grid.Row="3" Height="30" Margin="0,0,0,10"/>
