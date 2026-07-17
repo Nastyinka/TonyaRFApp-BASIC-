@@ -46,12 +46,19 @@ namespace TonyaRFApp
             LoadTimeSlots();
             GenerateWeekGrid(GetMonday(DateTime.Today));
         }
+
+        private void ShowDbError(string context, Exception ex)
+        {
+            MessageBox.Show($"An error occurred while {context}.\n\n" + "Please make sure SQL Server is running.\n\n" + $"Details: {ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
         private void LoadClients()              
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))  //Create connection
+            try
             {
-                connection.Open();
-                string query = @"SELECT 
+                using (SqlConnection connection = new SqlConnection(connectionString))  //Create connection
+                {
+                    connection.Open();
+                    string query = @"SELECT 
                                     c.ClientID, 
                                     c.FirstName, 
                                     c.Surname, 
@@ -75,22 +82,30 @@ namespace TonyaRFApp
                                     c.ClientID, c.FirstName, c.Surname, c.DOB, c.Address, c.PhoneNumber, c.HasAllergies, c.AllergyDetails, c.HasImplants, c.ImplantDetails, c.HasBotox, c.BotoxDetails, c.HasFaceMetals,
                                     c.FaceMetalDetails, c.ConsentSigned, c.ConsentDate";
 
-                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
-                DataTable table = new DataTable();
-                adapter.Fill(table);
+                    SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                    DataTable table = new DataTable();
+                    adapter.Fill(table);
 
-                //Feeding both the seclection and records grid
-                dgClients.ItemsSource = table.DefaultView;
-                dgRecordsClients.ItemsSource = table.DefaultView;
+                    //Feeding both the seclection and records grid
+                    dgClients.ItemsSource = table.DefaultView;
+                    dgRecordsClients.ItemsSource = table.DefaultView;
+                }
+            }
+
+            catch (SqlException ex)
+            {
+                ShowDbError("loading clients", ex);
             }
         } 
         private void LoadAppointments()
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
 
-                string query = @"
+                    string query = @"
                     SELECT
                         a.AppointmentsID,
                         a.ClientID,
@@ -110,58 +125,125 @@ namespace TonyaRFApp
                         a.AppointmentDate,
                         a.AppointmentTime";
 
-                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                    SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
 
-                DataTable table = new DataTable();
+                    DataTable table = new DataTable();
 
-                adapter.Fill(table);
-                dgAppointments.ItemsSource = table.DefaultView;
+                    adapter.Fill(table);
+                    dgAppointments.ItemsSource = table.DefaultView;
+                }
+            }
+
+            catch (SqlException ex)
+            {
+                ShowDbError("loading appointments", ex);
             }
         }
         private void LoadTreatments()
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
-                string query = "SELECT TreatmentID, TreatmentName, Price, DurationMinutes FROM Treatments";
-                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
-                DataTable table = new DataTable();
-                adapter.Fill(table);
-                dgTreatments.ItemsSource = table.DefaultView;
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string query = "SELECT TreatmentID, TreatmentName, Price, DurationMinutes FROM Treatments";
+                    SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                    DataTable table = new DataTable();
+                    adapter.Fill(table);
+                    dgTreatments.ItemsSource = table.DefaultView;
+                }
             }
+
+            catch (SqlException ex)
+            {
+                ShowDbError("loading treatments", ex);
+            }
+        }
+        //clear button for client form
+        private void NewClient_Click(object sender, RoutedEventArgs e)
+        {
+            selectedClientId = -1;
+            txtFirstName.Clear();
+            txtSurname.Clear();
+            dpDOB.SelectedDate = null;
+            txtAddress.Clear();
+            txtPhone.Clear();
+            chkAllergies.IsChecked = false;
+            txtAllergyDetails.Clear();
+            chkImplants.IsChecked = false;
+            txtImplantDetails.Clear();
+            chkBotox.IsChecked = false;
+            txtBotoxDetails.Clear();
+            chkFaceMetals.IsChecked = false;
+            txtFaceMetalDetails.Clear();
+            chkConsentSigned.IsChecked = false;
+            dpConsentDate.SelectedDate = null;
+            txtTotalAppointments.Text = "Total Appointments -";
+            dgClients.SelectedItem = null;
         }
         private void SearchClients(string searchText)
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
 
-                string query = @"
-                    SELECT *
-                    FROM Clients
-                    WHERE
-                    FirstName LIKE @Search
-                    OR Surname LIKE @Search
-                    OR PhoneNumber LIKE @Search";
+                    string query = @"
+                        SELECT
+                            c.ClientID, c.FirstName, c.Surname, c.DOB, c.Address, c.PhoneNumber, c.HasAllergies, c.AllergyDetails, 
+                            c.HasImplants, c.ImplantDetails, c.HasBotox, c.BotoxDetails, c.HasFaceMetals, c.FaceMetalDetails, c.ConsentSigned, c.ConsentDate,
+                        COUNT(a.AppointmentsID) AS TotalAppointments
+                        FROM Clients c
+                        LEFT JOIN Appointments a ON c.ClientID = a.ClientID
+                        WHERE c.FirstName LIKE @Search OR c.Surname LIKE @Search OR c.PhoneNumber LIKE @Search
+                        GROUP BY
+                            c.ClientID, c.FirstName, c.Surname, c.DOB, c.Address, c.PhoneNumber, c.HasAllergies, c.AllergyDetails,
+                            c.HasImplants, c.ImplantDetails, c.HasBotox, c.BotoxDetails, c.HasFaceMetals, c.FaceMetalDetails, c.ConsentSigned, c.ConsentDate";
 
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@Search", "%" + searchText + "%");
-                SqlDataAdapter adapter = new SqlDataAdapter(command);
-                DataTable table = new DataTable();
-                adapter.Fill(table);
-                dgClients.ItemsSource = table.DefaultView;
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@Search", "%" + searchText + "%");
+                    SqlDataAdapter adapter = new SqlDataAdapter(command);
+                    DataTable table = new DataTable();
+                    adapter.Fill(table);
+                    dgClients.ItemsSource = table.DefaultView;
 
 
+                }
+            }
+
+            catch (SqlException ex)
+            {
+                ShowDbError("searching clients", ex);
             }
         }
 
         private void AddClient_Click(object sender, RoutedEventArgs e)          //Add client click method
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            if (string.IsNullOrWhiteSpace(txtFirstName.Text))
             {
-                connection.Open();
+                MessageBox.Show("Please enter a first name.");
+                return;
+            }
 
-                string query = @"
+            if (string.IsNullOrWhiteSpace(txtSurname.Text))
+            {
+                MessageBox.Show("Please enter a surname");
+                return;
+            }
+            
+            if (string.IsNullOrWhiteSpace(txtPhone.Text))
+            {
+                MessageBox.Show("Please enter a phone number.");
+                return;
+            }
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    string query = @"
                 INSERT INTO Clients
                 (
                     FirstName,
@@ -199,47 +281,55 @@ namespace TonyaRFApp
                     @ConsentDate
                 )";
 
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@FirstName", txtFirstName.Text);
-                command.Parameters.AddWithValue("@Surname", txtSurname.Text);
-                command.Parameters.AddWithValue("@DOB", dpDOB.SelectedDate.HasValue ? (object)dpDOB.SelectedDate.Value.Date : DBNull.Value);
-                command.Parameters.AddWithValue("@Address", txtAddress.Text);
-                command.Parameters.AddWithValue("@Phone", txtPhone.Text);
-                command.Parameters.AddWithValue("@HasAllergies", chkAllergies.IsChecked == true);
-                command.Parameters.AddWithValue("@AllergyDetails", txtAllergyDetails.Text);
-                command.Parameters.AddWithValue("@HasImplants", chkImplants.IsChecked == true);
-                command.Parameters.AddWithValue("@ImplantDetails", txtImplantDetails.Text);
-                command.Parameters.AddWithValue("@HasBotox", chkBotox.IsChecked == true);
-                command.Parameters.AddWithValue("@BotoxDetails", txtBotoxDetails.Text);
-                command.Parameters.AddWithValue("@HasFaceMetals", chkFaceMetals.IsChecked == true);
-                command.Parameters.AddWithValue("@FaceMetalDetails", txtFaceMetalDetails.Text);
-                command.Parameters.AddWithValue("@ConsentSigned", chkConsentSigned.IsChecked == true);
-                command.Parameters.AddWithValue("@ConsentDate", dpConsentDate.SelectedDate.HasValue ? (object)dpConsentDate.SelectedDate.Value.Date : DBNull.Value);
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@FirstName", txtFirstName.Text);
+                    command.Parameters.AddWithValue("@Surname", txtSurname.Text);
+                    command.Parameters.AddWithValue("@DOB", dpDOB.SelectedDate.HasValue ? (object)dpDOB.SelectedDate.Value.Date : DBNull.Value);
+                    command.Parameters.AddWithValue("@Address", txtAddress.Text);
+                    command.Parameters.AddWithValue("@Phone", txtPhone.Text);
+                    command.Parameters.AddWithValue("@HasAllergies", chkAllergies.IsChecked == true);
+                    command.Parameters.AddWithValue("@AllergyDetails", txtAllergyDetails.Text);
+                    command.Parameters.AddWithValue("@HasImplants", chkImplants.IsChecked == true);
+                    command.Parameters.AddWithValue("@ImplantDetails", txtImplantDetails.Text);
+                    command.Parameters.AddWithValue("@HasBotox", chkBotox.IsChecked == true);
+                    command.Parameters.AddWithValue("@BotoxDetails", txtBotoxDetails.Text);
+                    command.Parameters.AddWithValue("@HasFaceMetals", chkFaceMetals.IsChecked == true);
+                    command.Parameters.AddWithValue("@FaceMetalDetails", txtFaceMetalDetails.Text);
+                    command.Parameters.AddWithValue("@ConsentSigned", chkConsentSigned.IsChecked == true);
+                    command.Parameters.AddWithValue("@ConsentDate", dpConsentDate.SelectedDate.HasValue ? (object)dpConsentDate.SelectedDate.Value.Date : DBNull.Value);
 
-                command.ExecuteNonQuery();
+                    command.ExecuteNonQuery();
+                }
+
+
+                LoadClients();
+                LoadClientComboBox();
+
+                txtFirstName.Clear();
+                txtSurname.Clear();
+                dpDOB.SelectedDate = null;
+                txtAddress.Clear();
+                txtPhone.Clear();
+                chkAllergies.IsChecked = false;
+                txtAllergyDetails.Clear();
+                chkImplants.IsChecked = false;
+                txtImplantDetails.Clear();
+                chkBotox.IsChecked = false;
+                txtBotoxDetails.Clear();
+                chkFaceMetals.IsChecked = false;
+                txtFaceMetalDetails.Clear();
+                chkConsentSigned.IsChecked = false;
+                dpConsentDate.SelectedDate = null;
+
+                MessageBox.Show("Client added successfully.");
             }
 
-            LoadClients();
-            LoadClientComboBox();
-
-            txtFirstName.Clear();
-            txtSurname.Clear();
-            dpDOB.SelectedDate = null;
-            txtAddress.Clear();
-            txtPhone.Clear();
-            chkAllergies.IsChecked = false;
-            txtAllergyDetails.Clear();
-            chkImplants.IsChecked = false;
-            txtImplantDetails.Clear();
-            chkBotox.IsChecked = false;
-            txtBotoxDetails.Clear();
-            chkFaceMetals.IsChecked = false;
-            txtFaceMetalDetails.Clear();
-            chkConsentSigned.IsChecked = false;
-            dpConsentDate.SelectedDate = null;
-
-            MessageBox.Show("Client added successfully.");
+            catch (SqlException ex)
+            {
+                ShowDbError("adding client", ex);
+            }
         }
+
         private void AddTreatment_Click(object sender, RoutedEventArgs e)          //Add treatment click method
         {
             // Basic validation
@@ -257,11 +347,14 @@ namespace TonyaRFApp
             int? duration = null;
             if (int.TryParse(txtDurationMinutes.Text, out int d))
                 duration = d;
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
 
-                string query = @"
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    string query = @"
                 INSERT INTO Treatments
                 (
                     TreatmentName,
@@ -275,18 +368,24 @@ namespace TonyaRFApp
                     @DurationMinutes
                 )";
 
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@TreatmentName", txtTreatmentName.Text);
-                command.Parameters.AddWithValue("@Price", price);
-                var p = command.Parameters.Add("@DurationMinutes", SqlDbType.Int);
-                p.Value = duration.HasValue ? (object)duration.Value : DBNull.Value;
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@TreatmentName", txtTreatmentName.Text);
+                    command.Parameters.AddWithValue("@Price", price);
+                    var p = command.Parameters.Add("@DurationMinutes", SqlDbType.Int);
+                    p.Value = duration.HasValue ? (object)duration.Value : DBNull.Value;
 
-                command.ExecuteNonQuery();
-            }
+                    command.ExecuteNonQuery();
+                }
+
 
             LoadTreatments();
             LoadTreatmentComboBox(); //  keeps the booking tab in sync
             MessageBox.Show("Treatment added successfully.");
+            }
+            catch (SqlException ex)
+            {
+                ShowDbError("adding treatment", ex);
+            }
         }
         private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -387,11 +486,12 @@ namespace TonyaRFApp
                 MessageBox.Show("Please select a client.");
                 return;
             }
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
-                string query = @"
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string query = @"
                     UPDATE Clients
                     SET
                         FirstName = @FirstName,
@@ -411,34 +511,41 @@ namespace TonyaRFApp
                         ConsentDate = @ConsentDate
                     WHERE ClientID = @ClientID";
 
-                SqlCommand command = new SqlCommand(query, connection);
+                    SqlCommand command = new SqlCommand(query, connection);
 
-                command.Parameters.AddWithValue("@FirstName", txtFirstName.Text);
-                command.Parameters.AddWithValue("@Surname", txtSurname.Text);
-                command.Parameters.AddWithValue("@DOB", dpDOB.SelectedDate.HasValue ? (object)dpDOB.SelectedDate.Value.Date : DBNull.Value);
-                command.Parameters.AddWithValue("@Address", txtAddress.Text);
-                command.Parameters.AddWithValue("@Phone", txtPhone.Text);
-                command.Parameters.AddWithValue("@HasAllergies", chkAllergies.IsChecked == true);
-                command.Parameters.AddWithValue("@AllergyDetails", txtAllergyDetails.Text);
-                command.Parameters.AddWithValue("@HasImplants", chkImplants.IsChecked == true);
-                command.Parameters.AddWithValue("@ImplantDetails", txtImplantDetails.Text);
-                command.Parameters.AddWithValue("@HasBotox", chkBotox.IsChecked == true);
-                command.Parameters.AddWithValue("@BotoxDetails", txtBotoxDetails.Text);
-                command.Parameters.AddWithValue("@HasFaceMetals", chkFaceMetals.IsChecked == true);
-                command.Parameters.AddWithValue("@FaceMetalDetails", txtFaceMetalDetails.Text);
-                command.Parameters.AddWithValue("@ConsentSigned", chkConsentSigned.IsChecked == true);
-                command.Parameters.AddWithValue("@ConsentDate", dpConsentDate.SelectedDate.HasValue ? (object)dpConsentDate.SelectedDate.Value.Date : DBNull.Value);
+                    command.Parameters.AddWithValue("@FirstName", txtFirstName.Text);
+                    command.Parameters.AddWithValue("@Surname", txtSurname.Text);
+                    command.Parameters.AddWithValue("@DOB", dpDOB.SelectedDate.HasValue ? (object)dpDOB.SelectedDate.Value.Date : DBNull.Value);
+                    command.Parameters.AddWithValue("@Address", txtAddress.Text);
+                    command.Parameters.AddWithValue("@Phone", txtPhone.Text);
+                    command.Parameters.AddWithValue("@HasAllergies", chkAllergies.IsChecked == true);
+                    command.Parameters.AddWithValue("@AllergyDetails", txtAllergyDetails.Text);
+                    command.Parameters.AddWithValue("@HasImplants", chkImplants.IsChecked == true);
+                    command.Parameters.AddWithValue("@ImplantDetails", txtImplantDetails.Text);
+                    command.Parameters.AddWithValue("@HasBotox", chkBotox.IsChecked == true);
+                    command.Parameters.AddWithValue("@BotoxDetails", txtBotoxDetails.Text);
+                    command.Parameters.AddWithValue("@HasFaceMetals", chkFaceMetals.IsChecked == true);
+                    command.Parameters.AddWithValue("@FaceMetalDetails", txtFaceMetalDetails.Text);
+                    command.Parameters.AddWithValue("@ConsentSigned", chkConsentSigned.IsChecked == true);
+                    command.Parameters.AddWithValue("@ConsentDate", dpConsentDate.SelectedDate.HasValue ? (object)dpConsentDate.SelectedDate.Value.Date : DBNull.Value);
 
-                command.Parameters.AddWithValue("@ClientID", selectedClientId);
+                    command.Parameters.AddWithValue("@ClientID", selectedClientId);
 
-                command.ExecuteNonQuery();
-            }
+                    command.ExecuteNonQuery();
+                }
 
             LoadClients();
             LoadClientComboBox();
 
             MessageBox.Show("Client Updated Successfully");
-        } 
+            }
+
+            catch (SqlException ex)
+            {
+                ShowDbError("updating client", ex);
+            }
+
+        }
         private void UpdateAppointment_Click(object sender, RoutedEventArgs e) // Update Appointment info method
         {
             if (selectedAppointmentId == -1)
@@ -450,10 +557,13 @@ namespace TonyaRFApp
             if (cbAppointmentTime.SelectedItem is string selectedTime)
                 parsedTime = TimeSpan.Parse(selectedTime);
 
-            using (SqlConnection connection = new SqlConnection(connectionString))
+
+            try
             {
-                connection.Open();
-                string query = @"
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string query = @"
                     UPDATE Appointments
                     SET
                         ClientID = @ClientID,
@@ -463,24 +573,31 @@ namespace TonyaRFApp
                         Notes = @Notes
                     WHERE AppointmentsID = @AppointmentsID";
 
-                SqlCommand command = new SqlCommand(query, connection);
-                var p = command.Parameters.Add("@AppointmentTime", SqlDbType.Time);
+                    SqlCommand command = new SqlCommand(query, connection);
+                    var p = command.Parameters.Add("@AppointmentTime", SqlDbType.Time);
 
-                command.Parameters.AddWithValue("@ClientID", cbClients.SelectedValue);
-                command.Parameters.AddWithValue("@TreatmentID", cbTreatments.SelectedValue);
-                command.Parameters.AddWithValue("@AppointmentDate", dpAppointmentDate.SelectedDate);
+                    command.Parameters.AddWithValue("@ClientID", cbClients.SelectedValue);
+                    command.Parameters.AddWithValue("@TreatmentID", cbTreatments.SelectedValue);
+                    command.Parameters.AddWithValue("@AppointmentDate", dpAppointmentDate.SelectedDate);
 
-                p.Value = parsedTime.HasValue ? (object)parsedTime.Value : DBNull.Value;
-                command.Parameters.AddWithValue("@Notes", txtAppointmentNotes.Text);
-                command.Parameters.AddWithValue("@AppointmentsID", selectedAppointmentId);
+                    p.Value = parsedTime.HasValue ? (object)parsedTime.Value : DBNull.Value;
+                    command.Parameters.AddWithValue("@Notes", txtAppointmentNotes.Text);
+                    command.Parameters.AddWithValue("@AppointmentsID", selectedAppointmentId);
 
-                command.ExecuteNonQuery();
-            }
+                    command.ExecuteNonQuery();
+                }
+    
 
             LoadAppointments();
             GenerateWeekGrid(currentWeekStart); // Refresh the week grid to reflect changes
 
             MessageBox.Show("Appointment Updated Successfully");
+            }
+
+            catch (SqlException ex)
+            {
+                ShowDbError("updating appointment", ex);
+            }
         }
         private void UpdateTreatment_Click(object sender, RoutedEventArgs e) // Update treatment info method
         {
@@ -499,10 +616,13 @@ namespace TonyaRFApp
             if (int.TryParse(txtDurationMinutes.Text, out int d))
                 duration = d;
 
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
-                string query = @"
+
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string query = @"
                     UPDATE Treatments
                     SET
                         TreatmentName = @TreatmentName,
@@ -510,123 +630,139 @@ namespace TonyaRFApp
                         DurationMinutes = @DurationMinutes
                     WHERE TreatmentID = @TreatmentID";
 
-                SqlCommand command = new SqlCommand(query, connection);
+                    SqlCommand command = new SqlCommand(query, connection);
 
-                command.Parameters.AddWithValue("@TreatmentName", txtTreatmentName.Text);
-                command.Parameters.AddWithValue("@Price", price);
-                
-                var p = command.Parameters.Add("@DurationMinutes", SqlDbType.Int);
-                p.Value = duration.HasValue ? (object)duration.Value : DBNull.Value;
+                    command.Parameters.AddWithValue("@TreatmentName", txtTreatmentName.Text);
+                    command.Parameters.AddWithValue("@Price", price);
 
-                command.Parameters.AddWithValue("@TreatmentID", selectedTreatmentId);
+                    var p = command.Parameters.Add("@DurationMinutes", SqlDbType.Int);
+                    p.Value = duration.HasValue ? (object)duration.Value : DBNull.Value;
 
-                command.ExecuteNonQuery();
-            }
+                    command.Parameters.AddWithValue("@TreatmentID", selectedTreatmentId);
+
+                    command.ExecuteNonQuery();
+                }
 
             LoadTreatments();
             LoadTreatmentComboBox();
 
             MessageBox.Show("Treatment Updated Successfully");
+            }
+
+            catch (SqlException ex)
+            {
+                ShowDbError("updating treatment", ex);
+            }
         }
 
         private void DeleteClient_Click(Object sender, RoutedEventArgs e)       //Delete client click method
         {
-            if(selectedClientId == -1)
+            if (selectedClientId == -1)
             {
                 MessageBox.Show("Please select a client.");
                 return;
             }
 
-            bool hasAppointments = false;
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
+                bool hasAppointments = false;
 
-                string checkQuery = @"
+
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    string checkQuery = @"
                    SELECT COUNT(*)
                     FROM Appointments
                     WHERE ClientID = @ClientID";
-                 SqlCommand checkCommand = new SqlCommand(checkQuery, connection);
-                 checkCommand.Parameters.AddWithValue("@ClientID", selectedClientId);
-                // returns single value
-                 int appointmentCount = (int)checkCommand.ExecuteScalar();
-                 hasAppointments = appointmentCount > 0;
-            }
-            if (hasAppointments)
-            {
-                MessageBoxResult result = MessageBox.Show(
-                    "This client has an existing appointment. \n\n" +
-                    "Click YES to delete the client AND all their appointments. \n" +
-                    "Click NO to cancel.",
-                    "Client Has Appointments",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
-
-                if (result != MessageBoxResult.Yes)     // Delete Appointments first, THEN delete client (Child records deleted first)
-                    return;
-
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-
-                    string deleteAppointments =
-                        "DELETE FROM Appointments WHERE ClientID = @ClientID";
-                    SqlCommand cmd = new SqlCommand(deleteAppointments, connection);
-                    cmd.Parameters.AddWithValue("@ClientID", selectedClientId);
-                    cmd.ExecuteNonQuery();
-
-                    string deleteClient = 
-                        "DELETE FROM Clients WHERE ClientID = @ClientID";
-                    SqlCommand cmd2 = new SqlCommand(deleteClient, connection);
-                    cmd2.Parameters.AddWithValue("@ClientID", selectedClientId);
-                    cmd2.ExecuteNonQuery();
+                    SqlCommand checkCommand = new SqlCommand(checkQuery, connection);
+                    checkCommand.Parameters.AddWithValue("@ClientID", selectedClientId);
+                    // returns single value
+                    int appointmentCount = (int)checkCommand.ExecuteScalar();
+                    hasAppointments = appointmentCount > 0;
                 }
-
-            }
-            else
-            {
-                // No Appointments, simply delete client - regular confirmation
-
-                MessageBoxResult result = MessageBox.Show(
-                    "Are you sure you want to delete this client?",
-                    "Confirm Delete",
-                    MessageBoxButton.YesNo);
-
-                if (result != MessageBoxResult.Yes)
-                    return;
-
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                if (hasAppointments)
                 {
-                    connection.Open();
-                    string query = "DELETE FROM Clients WHERE ClientID = @ClientID";
-                    SqlCommand command = new SqlCommand(query, connection);
-                    command.Parameters.AddWithValue("@ClientID", selectedClientId);
-                    command.ExecuteNonQuery();
+                    MessageBoxResult result = MessageBox.Show(
+                        "This client has an existing appointment. \n\n" +
+                        "Click YES to delete the client AND all their appointments. \n" +
+                        "Click NO to cancel.",
+                        "Client Has Appointments",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning);
+
+                    if (result != MessageBoxResult.Yes)     // Delete Appointments first, THEN delete client (Child records deleted first)
+                        return;
+
+                    using (SqlConnection connection = new SqlConnection(connectionString))
+                    {
+                        connection.Open();
+
+                        string deleteAppointments =
+                            "DELETE FROM Appointments WHERE ClientID = @ClientID";
+                        SqlCommand cmd = new SqlCommand(deleteAppointments, connection);
+                        cmd.Parameters.AddWithValue("@ClientID", selectedClientId);
+                        cmd.ExecuteNonQuery();
+
+                        string deleteClient =
+                            "DELETE FROM Clients WHERE ClientID = @ClientID";
+                        SqlCommand cmd2 = new SqlCommand(deleteClient, connection);
+                        cmd2.Parameters.AddWithValue("@ClientID", selectedClientId);
+                        cmd2.ExecuteNonQuery();
+                    }
+
                 }
+                else
+                {
+                    // No Appointments, simply delete client - regular confirmation
+
+                    MessageBoxResult result = MessageBox.Show(
+                        "Are you sure you want to delete this client?",
+                        "Confirm Delete",
+                        MessageBoxButton.YesNo);
+
+                    if (result != MessageBoxResult.Yes)
+                        return;
+
+                    using (SqlConnection connection = new SqlConnection(connectionString))
+                    {
+                        connection.Open();
+                        string query = "DELETE FROM Clients WHERE ClientID = @ClientID";
+                        SqlCommand command = new SqlCommand(query, connection);
+                        command.Parameters.AddWithValue("@ClientID", selectedClientId);
+                        command.ExecuteNonQuery();
+                    }
+
+                }
+                LoadClients();
+                LoadClientComboBox();
+                LoadAppointments();
+
+                txtFirstName.Clear();
+                txtSurname.Clear();
+                dpDOB.SelectedDate = null;
+                txtAddress.Clear();
+                txtPhone.Clear();
+                chkAllergies.IsChecked = false;
+                txtAllergyDetails.Clear();
+                chkImplants.IsChecked = false;
+                txtImplantDetails.Clear();
+                chkBotox.IsChecked = false;
+                txtBotoxDetails.Clear();
+                chkFaceMetals.IsChecked = false;
+                txtFaceMetalDetails.Clear();
+                chkConsentSigned.IsChecked = false;
+                dpConsentDate.SelectedDate = null;
+
+                selectedClientId = -1;
+
+                MessageBox.Show("Client deleted successfully.");
             }
-            LoadClients();
-            LoadClientComboBox();
-            LoadAppointments();
-
-            txtFirstName.Clear();
-            txtSurname.Clear();
-            dpDOB.SelectedDate = null;
-            txtAddress.Clear();
-            txtPhone.Clear();
-            chkAllergies.IsChecked = false;
-            txtAllergyDetails.Clear();
-            chkImplants.IsChecked = false;
-            txtImplantDetails.Clear();
-            chkBotox.IsChecked = false;
-            txtBotoxDetails.Clear();
-            chkFaceMetals.IsChecked = false;
-            txtFaceMetalDetails.Clear();
-            chkConsentSigned.IsChecked = false;
-            dpConsentDate.SelectedDate = null;
-
-            selectedClientId = -1;
-
-            MessageBox.Show("Client deleted successfully.");
+            catch (SqlException ex)
+            {
+                ShowDbError("deleting client", ex);
+            }
         }
 
      
@@ -645,18 +781,20 @@ namespace TonyaRFApp
 
             if (result != MessageBoxResult.Yes)
                 return;
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
 
-                string query = "DELETE FROM Appointments WHERE AppointmentsID = @AppointmentsID";
-                SqlCommand command = new SqlCommand(query, connection);
+                    string query = "DELETE FROM Appointments WHERE AppointmentsID = @AppointmentsID";
+                    SqlCommand command = new SqlCommand(query, connection);
 
-                command.Parameters.AddWithValue("@AppointmentsID", selectedAppointmentId);
+                    command.Parameters.AddWithValue("@AppointmentsID", selectedAppointmentId);
 
-                command.ExecuteNonQuery();
-            }
+                    command.ExecuteNonQuery();
+                }
+
             LoadAppointments();
 
             selectedAppointmentId = -1;
@@ -666,6 +804,11 @@ namespace TonyaRFApp
 
 
             MessageBox.Show("Appointment deleted successfully.");
+            }
+            catch (SqlException ex)
+            {
+                ShowDbError("deleting appointment", ex);
+            }
         }
         private void DeleteTreatment_Click(Object sender, RoutedEventArgs e)       //Delete treatment click method
         {
@@ -682,18 +825,20 @@ namespace TonyaRFApp
 
             if (result != MessageBoxResult.Yes)
                 return;
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
 
-                string query = "DELETE FROM Treatments WHERE TreatmentID = @TreatmentID";
-                SqlCommand command = new SqlCommand(query, connection);
+                    string query = "DELETE FROM Treatments WHERE TreatmentID = @TreatmentID";
+                    SqlCommand command = new SqlCommand(query, connection);
 
-                command.Parameters.AddWithValue("@TreatmentID", selectedTreatmentId);
+                    command.Parameters.AddWithValue("@TreatmentID", selectedTreatmentId);
 
-                command.ExecuteNonQuery();
-            }
+                    command.ExecuteNonQuery();
+                }
+       
             LoadTreatments();
             LoadTreatmentComboBox();
 
@@ -704,6 +849,11 @@ namespace TonyaRFApp
             selectedTreatmentId = -1;
 
             MessageBox.Show("Treatment deleted successfully.");
+            }
+            catch (SqlException ex)
+            {
+                ShowDbError("deleting treatment", ex);
+            }
         }
 
         private void LoadTimeSlots()
@@ -722,61 +872,75 @@ namespace TonyaRFApp
         }
         private void LoadClientComboBox()               //Client ComboBox Method
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
 
-                string query = @"
+                    string query = @"
                     SELECT
                         ClientID,
                         FirstName + ' ' + Surname AS FullName
                     FROM Clients";
 
-                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                    SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
 
-                DataTable table = new DataTable();
+                    DataTable table = new DataTable();
 
-                adapter.Fill(table);
+                    adapter.Fill(table);
 
-                cbClients.ItemsSource = table.DefaultView;
+                    cbClients.ItemsSource = table.DefaultView;
 
-                cbClients.DisplayMemberPath = "FullName";
+                    cbClients.DisplayMemberPath = "FullName";
 
-                cbClients.SelectedValuePath = "ClientID";
+                    cbClients.SelectedValuePath = "ClientID";
 
-                cbPanelClients.ItemsSource = table.DefaultView;
-                cbPanelClients.DisplayMemberPath = "FullName";
-                cbPanelClients.SelectedValuePath = "ClientID";
+                    cbPanelClients.ItemsSource = table.DefaultView;
+                    cbPanelClients.DisplayMemberPath = "FullName";
+                    cbPanelClients.SelectedValuePath = "ClientID";
+                }
+            }
+            catch (SqlException ex)
+            {
+                ShowDbError("loading client combobox", ex);
             }
         }
 
         private void LoadTreatmentComboBox()                        //Treatments ComboBox Method
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            { 
-                connection.Open();
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
 
-                string query = @"
+                    string query = @"
                     SELECT
                         TreatmentID,
                         TreatmentName
                     FROM Treatments";
 
-                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                    SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
 
-                DataTable table = new DataTable();
+                    DataTable table = new DataTable();
 
-                adapter.Fill(table);
-                
-                cbTreatments.ItemsSource = table.DefaultView;
+                    adapter.Fill(table);
 
-                cbTreatments.DisplayMemberPath = "TreatmentName";
+                    cbTreatments.ItemsSource = table.DefaultView;
 
-                cbTreatments.SelectedValuePath = "TreatmentID";
+                    cbTreatments.DisplayMemberPath = "TreatmentName";
 
-                cbPanelTreatments.ItemsSource = table.DefaultView;
-                cbPanelTreatments.DisplayMemberPath = "TreatmentName";
-                cbPanelTreatments.SelectedValuePath = "TreatmentID";
+                    cbTreatments.SelectedValuePath = "TreatmentID";
+
+                    cbPanelTreatments.ItemsSource = table.DefaultView;
+                    cbPanelTreatments.DisplayMemberPath = "TreatmentName";
+                    cbPanelTreatments.SelectedValuePath = "TreatmentID";
+                }
+            }
+            catch (SqlException ex)
+            {
+                ShowDbError("loading treatment combobox", ex);
             }
         }
         
@@ -786,11 +950,36 @@ namespace TonyaRFApp
             if (cbAppointmentTime.SelectedItem is string selectedTime)
                 parsedTime = TimeSpan.Parse(selectedTime);
 
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            if (cbClients.SelectedValue == null)
             {
-                connection.Open();
+                MessageBox.Show("Please select a client.");
+                return;
+            }
 
-                string query = @"
+            if (cbTreatments.SelectedValue == null)
+            {
+                MessageBox.Show("Please select a treatment.");
+                return;
+            }
+
+            if (dpAppointmentDate.SelectedDate == null)
+            {
+                MessageBox.Show("Please select a date.");
+                return;
+            }
+
+            if (cbAppointmentTime.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a time.");
+                return;
+            }
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    string query = @"
                     INSERT INTO Appointments
                         (
                             ClientID,
@@ -807,25 +996,31 @@ namespace TonyaRFApp
                             @AppointmentTime,
                             @Notes
                         )";
-                SqlCommand command = new SqlCommand(query, connection);
+                    SqlCommand command = new SqlCommand(query, connection);
 
-                command.Parameters.AddWithValue("@ClientID", cbClients.SelectedValue);
+                    command.Parameters.AddWithValue("@ClientID", cbClients.SelectedValue);
 
-                command.Parameters.AddWithValue("@TreatmentID", cbTreatments.SelectedValue);
+                    command.Parameters.AddWithValue("@TreatmentID", cbTreatments.SelectedValue);
 
-                command.Parameters.AddWithValue("@AppointmentDate", dpAppointmentDate.SelectedDate);
+                    command.Parameters.AddWithValue("@AppointmentDate", dpAppointmentDate.SelectedDate);
 
-                var p = command.Parameters.Add("@AppointmentTime", SqlDbType.Time);
-                p.Value = parsedTime.HasValue ? (object)parsedTime.Value : DBNull.Value;
+                    var p = command.Parameters.Add("@AppointmentTime", SqlDbType.Time);
+                    p.Value = parsedTime.HasValue ? (object)parsedTime.Value : DBNull.Value;
 
-                command.Parameters.AddWithValue("@Notes", txtAppointmentNotes.Text);
+                    command.Parameters.AddWithValue("@Notes", txtAppointmentNotes.Text);
 
-                command.ExecuteNonQuery();
-            }
+                    command.ExecuteNonQuery();
+                }
+
             LoadAppointments();
             GenerateWeekGrid(currentWeekStart); // Refresh the week grid to reflect new appointment
 
             MessageBox.Show("Appointment Booked Successfully.");
+            }
+            catch (SqlException ex)
+            {
+                ShowDbError("booking appointment", ex);
+            }
         }
 
         // --Calender & Navigation Methods--
@@ -891,9 +1086,14 @@ namespace TonyaRFApp
             {
                 DateTime thisDay = weekStart.AddDays(day);
 
+                bool isToday = thisDay.Date == DateTime.Today;
+
                 Border headerCell = new Border
                 {
-                    Background = (Brush)FindResource("MidLavBrush"),
+
+                    Background = isToday
+                    ? (Brush)FindResource("PrimaryBrush")
+                    : (Brush)FindResource("MidLavBrush"),
                     BorderBrush = (Brush)FindResource("BorderBrush"),
                     BorderThickness = new Thickness(0.5),
                     Padding = new Thickness(4)
@@ -924,7 +1124,7 @@ namespace TonyaRFApp
             {
                 Border timeCell = new Border
                 {
-                    Background = (Brush)FindResource("LavanderBrush"),
+                    Background = (Brush)FindResource("LavenderBrush"),
                     BorderBrush = (Brush)FindResource("BorderBrush"),
                     BorderThickness = new Thickness(0.5),
                     Padding = new Thickness(4, 2, 4, 2)
@@ -966,7 +1166,7 @@ namespace TonyaRFApp
                     //highlight on hover
                     dayCell.MouseEnter += (s, e) =>
                     {
-                        dayCell.Background = (Brush)FindResource("LavanderBrush");
+                        dayCell.Background = (Brush)FindResource("LavenderBrush");
                     };
 
                     dayCell.MouseLeave += (s, e) =>
@@ -1000,12 +1200,13 @@ namespace TonyaRFApp
             //query up to but not including the day AFTER sunday
 
             var appointments = new Dictionary<string, AppointmentInfo>();
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
 
-                string query = @"
+                    string query = @"
                     SELECT
                         a.AppointmentsID,
                         a.AppointmentDate,
@@ -1022,129 +1223,134 @@ namespace TonyaRFApp
                     WHERE a.AppointmentDate >= @WeekStart AND a.AppointmentDate < @WeekEnd
                     ORDER BY a.AppointmentDate, a.AppointmentTime";
 
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@WeekStart", weekStart.Date);
-                command.Parameters.AddWithValue("@WeekEnd", weekEnd.Date);
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@WeekStart", weekStart.Date);
+                    command.Parameters.AddWithValue("@WeekEnd", weekEnd.Date);
 
-                SqlDataReader reader = command.ExecuteReader(); //reads one row at a time, more efficient than loading all into memory
+                    SqlDataReader reader = command.ExecuteReader(); //reads one row at a time, more efficient than loading all into memory
 
-                while (reader.Read())
-                {
-                    int appointmentId = reader.GetInt32(0);
-                    DateTime apptDate = reader.GetDateTime(1);
-                    TimeSpan apptTime = reader.GetTimeSpan(2);
-                    int clientId = reader.GetInt32(3);
-                    int treatmentId = reader.GetInt32(4);
-
-                    //lookup for key from date n time
-                    string key = $"{apptDate:yyyy-MM-dd}-{apptTime:hh\\:mm}";
-
-                    appointments[key] = new AppointmentInfo
+                    while (reader.Read())
                     {
-                        AppointmentId = appointmentId,
-                        ClientId = clientId,
-                        TreatmentId = treatmentId,
-                        ClientName = reader.GetString(5),
-                        TreatmentName = reader.GetString(6),
-                        DurationMinutes = reader.GetInt32(7),
-                        Notes = reader.IsDBNull(8) ? "" : reader.GetString(8)
-                    };
+                        int appointmentId = reader.GetInt32(0);
+                        DateTime apptDate = reader.GetDateTime(1);
+                        TimeSpan apptTime = reader.GetTimeSpan(2);
+                        int clientId = reader.GetInt32(3);
+                        int treatmentId = reader.GetInt32(4);
 
-                    // reader.DBNULL checks if notes is empty in db, using empty string to prevent crashing
+                        //lookup for key from date n time
+                        string key = $"{apptDate:yyyy-MM-dd}-{apptTime:hh\\:mm}";
+
+                        appointments[key] = new AppointmentInfo
+                        {
+                            AppointmentId = appointmentId,
+                            ClientId = clientId,
+                            TreatmentId = treatmentId,
+                            ClientName = reader.GetString(5),
+                            TreatmentName = reader.GetString(6),
+                            DurationMinutes = reader.GetInt32(7),
+                            Notes = reader.IsDBNull(8) ? "" : reader.GetString(8)
+                        };
+
+                        // reader.DBNULL checks if notes is empty in db, using empty string to prevent crashing
+                    }
+                }
+
+                for (int day = 0; day < 7; day++)
+                {
+                    DateTime thisDay = weekStart.AddDays(day);
+                    int col = day + 1; // +1 because first column is time, so days start at column 1
+
+                    for (int slot = 0; slot < 24; slot++)
+                    {
+                        //working out what time this slot represents
+                        TimeSpan slotTime = TimeSpan.FromHours(8) + TimeSpan.FromMinutes(slot * 30); // 8:00 + 0, 30, 60, 90... minutes
+
+                        // same key used in storing
+                        string key = $"{thisDay:yyyy-MM-dd}-{slotTime:hh\\:mm}";
+
+                        //checking if there is an app at this day n time
+                        if (!appointments.ContainsKey(key))
+                            continue; //no booking = skip next slot
+
+                        AppointmentInfo appt = appointments[key];
+
+                        //Calculating how many rows the booking spans, math ceiling rounding up and math max ensuring at least 1 row
+
+                        int rowSpan = Math.Max(1, (int)Math.Ceiling(appt.DurationMinutes / 30.0));
+
+                        int gridRow = slot + 1; // +1 because first row is header
+
+                        // Building the booking block
+
+                        Border bookingBlock = new Border
+                        {
+                            Background = (Brush)FindResource("PrimaryBrush"),
+                            BorderBrush = (Brush)FindResource("DarkBrush"),
+                            BorderThickness = new Thickness(1),
+                            CornerRadius = new CornerRadius(4),
+                            Padding = new Thickness(4, 2, 4, 2),
+                            Margin = new Thickness(1)
+                        };
+
+                        //Building the text inside the booking block
+
+                        TextBlock bookingText = new TextBlock
+                        {
+                            Text = $"{appt.ClientName}\n{appt.TreatmentName}",
+                            Foreground = (Brush)FindResource("TextLightBrush"),
+                            FontSize = 11,
+                            FontWeight = FontWeights.SemiBold,
+                            TextWrapping = TextWrapping.Wrap,       // Ensures text wraps within the block, doesnt get cut off
+                            VerticalAlignment = VerticalAlignment.Top,
+                            TextTrimming = TextTrimming.CharacterEllipsis  // Adds "..." if text is too long for the block
+                        };
+
+                        //tooltip shows full details when hovering over the booking block
+                        bookingBlock.ToolTip = new ToolTip
+                        {
+                            Content = $"{appt.ClientName}\n{appt.TreatmentName}\n{appt.DurationMinutes} mins" + (string.IsNullOrEmpty(appt.Notes) ? "" : $"\nNotes: {appt.Notes}")
+                        };
+
+                        bookingBlock.Child = bookingText;
+
+                        //positioning the block in the grid
+
+                        Grid.SetRow(bookingBlock, gridRow);
+                        Grid.SetColumn(bookingBlock, col);
+                        Grid.SetRowSpan(bookingBlock, rowSpan);
+                        //setrowspan ensures the block spans multiple rows if the appointment is longer than 30 minutes
+
+                        //booking block MUST be added to the grid AFTER the empty cells are created, otherwise it will be hidden behind them
+
+                        weekGrid.Children.Add(bookingBlock);
+
+                        // OLD VER -- bookingBlock.IsHitTestVisible = false; Ensures the booking block does not intercept mouse clicks, allowing the underlying cell to be clicked instead 
+                        AppointmentInfo capturedAppt = appt; // Capture the appointment for the lambda
+                        DateTime capturedDay = thisDay; // Capture the day for the lambda
+                        TimeSpan capturedTime = slotTime; // Capture the time for the lambda
+
+                        bookingBlock.Cursor = Cursors.Hand; // Change cursor to hand to indicate it's clickable
+                        bookingBlock.MouseEnter += (s, e) =>
+                        {
+                            bookingBlock.Background = (Brush)FindResource("DarkBrush");
+                        };
+                        bookingBlock.MouseLeave += (s, e) =>
+                        {
+                            // Reset the background color when the mouse leaves
+                            bookingBlock.Background = (Brush)FindResource("PrimaryBrush");
+                        };
+                        bookingBlock.MouseLeftButtonUp += (s, e) =>
+                        {
+                            // Stop click from reaching cell underneath - day cell
+                            e.Handled = true;
+                            CalendarBooking_Clicked(capturedAppt, capturedDay, capturedTime);
+                        };
+                    }
                 }
             }
-
-            for (int day = 0; day < 7; day++)
+            catch (SqlException ex)
             {
-                DateTime thisDay = weekStart.AddDays(day);
-                int col = day + 1; // +1 because first column is time, so days start at column 1
-
-                for (int slot = 0; slot < 24; slot++)
-                {
-                    //working out what time this slot represents
-                    TimeSpan slotTime = TimeSpan.FromHours(8) + TimeSpan.FromMinutes(slot * 30); // 8:00 + 0, 30, 60, 90... minutes
-
-                    // same key used in storing
-                    string key = $"{thisDay:yyyy-MM-dd}-{slotTime:hh\\:mm}";
-
-                    //checking if there is an app at this day n time
-                    if (!appointments.ContainsKey(key))
-                        continue; //no booking = skip next slot
-
-                    AppointmentInfo appt = appointments[key];
-
-                    //Calculating how many rows the booking spans, math ceiling rounding up and math max ensuring at least 1 row
-
-                    int rowSpan = Math.Max(1, (int)Math.Ceiling(appt.DurationMinutes / 30.0));
-
-                    int gridRow = slot + 1; // +1 because first row is header
-
-                    // Building the booking block
-
-                    Border bookingBlock = new Border
-                    {
-                        Background = (Brush)FindResource("PrimaryBrush"),
-                        BorderBrush = (Brush)FindResource("DarkBrush"),
-                        BorderThickness = new Thickness(1),
-                        CornerRadius = new CornerRadius(4),
-                        Padding = new Thickness(4, 2, 4, 2),
-                        Margin = new Thickness(1)
-                    };
-
-                    //Building the text inside the booking block
-
-                    TextBlock bookingText = new TextBlock
-                    {
-                        Text = $"{appt.ClientName}\n{appt.TreatmentName}",
-                        Foreground = (Brush)FindResource("TextLightBrush"),
-                        FontSize = 11,
-                        FontWeight = FontWeights.SemiBold,
-                        TextWrapping = TextWrapping.Wrap,       // Ensures text wraps within the block, doesnt get cut off
-                        VerticalAlignment = VerticalAlignment.Top,
-                        TextTrimming = TextTrimming.CharacterEllipsis  // Adds "..." if text is too long for the block
-                    };
-
-                    //tooltip shows full details when hovering over the booking block
-                    bookingBlock.ToolTip = new ToolTip
-                    {
-                        Content = $"{appt.ClientName}\n + {appt.TreatmentName}\n + {appt.DurationMinutes} mins" + (string.IsNullOrEmpty(appt.Notes) ? "" : $"\nNotes: {appt.Notes}")
-                    };
-
-                    bookingBlock.Child = bookingText;
-
-                    //positioning the block in the grid
-
-                    Grid.SetRow(bookingBlock, gridRow);
-                    Grid.SetColumn(bookingBlock, col);
-                    Grid.SetRowSpan(bookingBlock, rowSpan);
-                    //setrowspan ensures the block spans multiple rows if the appointment is longer than 30 minutes
-
-                    //booking block MUST be added to the grid AFTER the empty cells are created, otherwise it will be hidden behind them
-
-                    weekGrid.Children.Add(bookingBlock);
-
-                    // OLD VER -- bookingBlock.IsHitTestVisible = false; Ensures the booking block does not intercept mouse clicks, allowing the underlying cell to be clicked instead 
-                    AppointmentInfo capturedAppt = appt; // Capture the appointment for the lambda
-                    DateTime capturedDay = thisDay; // Capture the day for the lambda
-                    TimeSpan capturedTime = slotTime; // Capture the time for the lambda
-
-                    bookingBlock.Cursor = Cursors.Hand; // Change cursor to hand to indicate it's clickable
-                    bookingBlock.MouseEnter += (s, e) =>
-                    {
-                        bookingBlock.Background = (Brush)FindResource("DarkBrush");
-                    };
-                    bookingBlock.MouseLeave += (s, e) =>
-                    {
-                        // Reset the background color when the mouse leaves
-                        bookingBlock.Background = (Brush)FindResource("PrimaryBrush");
-                    };
-                    bookingBlock.MouseLeftButtonUp += (s, e) =>
-                    {
-                        // Stop click from reaching cell underneath - day cell
-                        e.Handled = true;
-                        CalendarBooking_Clicked(capturedAppt, capturedDay, capturedTime);
-                    };
-                }
+                ShowDbError("loading week appointments", ex);
             }
         }
 
@@ -1160,7 +1366,7 @@ namespace TonyaRFApp
                 return;
 
             //updating the history label with client name
-            string name = $"{row.Field<string>("FirstName")}" + $"{row.Field<string>("Surname")}";
+            string name = $"{row.Field<string>("FirstName")} " + $"{row.Field<string>("Surname")}";
             txtAppointmentHistoryLabel.Text = $"Appointment History - {name}";
 
             //load their appts into lower grid
@@ -1168,10 +1374,12 @@ namespace TonyaRFApp
         }
         private void LoadClientAppointments(int clientId)
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
-                string query = @"
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string query = @"
                         SELECT
                             a.AppointmentDate, a.AppointmentTime, t.TreatmentName, t.Price, a.Notes
                         FROM Appointments a
@@ -1180,15 +1388,20 @@ namespace TonyaRFApp
                         ORDER BY
                             a.AppointmentDate DESC,
                             a.AppointmentTime DESC";
-                //order by DESC means most recent apps first
+                    //order by DESC means most recent apps first
 
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@ClientID", clientId);
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@ClientID", clientId);
 
-                SqlDataAdapter adapter = new SqlDataAdapter(command);
-                DataTable table = new DataTable();
-                adapter.Fill(table);
-                dgClientAppointments.ItemsSource = table.DefaultView;
+                    SqlDataAdapter adapter = new SqlDataAdapter(command);
+                    DataTable table = new DataTable();
+                    adapter.Fill(table);
+                    dgClientAppointments.ItemsSource = table.DefaultView;
+                }
+            }
+            catch (SqlException ex)
+            {
+                ShowDbError("loading client appointments", ex);
             }
         }
         //Buttons
@@ -1256,21 +1469,28 @@ namespace TonyaRFApp
 
             if (result != MessageBoxResult.Yes)
                 return;
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
                     string query =
                         "DELETE FROM Appointments WHERE AppointmentsID = @AppointmentsID";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@AppointmentsID", selectedCalendarAppointmentId);
-                command.ExecuteNonQuery();
-            }
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@AppointmentsID", selectedCalendarAppointmentId);
+                    command.ExecuteNonQuery();
+                }
+           
             LoadAppointments();
             GenerateWeekGrid(currentWeekStart);
             sidePanel.Visibility = Visibility.Collapsed;
             selectedCalendarAppointmentId = -1;
             MessageBox.Show("Appointment deleted successfully");
+            }
+            catch (SqlException ex)
+            {
+                ShowDbError("panel deleting appointment", ex);
+            }
         }
         private void PanelUpdateAppointment_Click(object sender, RoutedEventArgs e)
         {
@@ -1296,12 +1516,13 @@ namespace TonyaRFApp
                 MessageBox.Show("Please select a date and time.");
                 return;
             }
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
 
-                string query = @"
+                    string query = @"
                     UPDATE Appointments
                     SET
                         ClientID = @ClientID,
@@ -1311,24 +1532,30 @@ namespace TonyaRFApp
                         Notes = @Notes
                     WHERE AppointmentsID = @AppointmentsID";
 
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@ClientID", cbPanelClients.SelectedValue);
-                command.Parameters.AddWithValue("@TreatmentID", cbPanelTreatments.SelectedValue);
-                command.Parameters.AddWithValue("@AppointmentDate", newDate.Value.Date);
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@ClientID", cbPanelClients.SelectedValue);
+                    command.Parameters.AddWithValue("@TreatmentID", cbPanelTreatments.SelectedValue);
+                    command.Parameters.AddWithValue("@AppointmentDate", newDate.Value.Date);
 
-                var p = command.Parameters.Add("@AppointmentTime", SqlDbType.Time);
-                p.Value = newTime.Value;
+                    var p = command.Parameters.Add("@AppointmentTime", SqlDbType.Time);
+                    p.Value = newTime.Value;
 
-                command.Parameters.AddWithValue("@Notes", txtPanelNotes.Text);
-                command.Parameters.AddWithValue("@AppointmentsID", selectedCalendarAppointmentId);
+                    command.Parameters.AddWithValue("@Notes", txtPanelNotes.Text);
+                    command.Parameters.AddWithValue("@AppointmentsID", selectedCalendarAppointmentId);
 
-                command.ExecuteNonQuery();
-            }
+                    command.ExecuteNonQuery();
+                }
+
 
             LoadAppointments();
             GenerateWeekGrid(currentWeekStart); // Refresh the week grid to reflect changes
             sidePanel.Visibility = Visibility.Collapsed; // Close the side panel
             MessageBox.Show("Appointment Updated Successfully.");
+            }
+            catch (SqlException ex)
+            {
+                ShowDbError("panel updating appointment", ex);
+            }
         }
         private void SetPanelMode(PanelMode mode)
         {
@@ -1369,12 +1596,13 @@ namespace TonyaRFApp
                 MessageBox.Show("Please select a treatment.");
                 return;
             }
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
 
-                string query = @"
+                    string query = @"
                     INSERT INTO Appointments
                         (
                             ClientID,
@@ -1392,18 +1620,19 @@ namespace TonyaRFApp
                             @Notes
                         )";
 
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@ClientID", cbPanelClients.SelectedValue);
-                command.Parameters.AddWithValue("@TreatmentID", cbPanelTreatments.SelectedValue);
-                command.Parameters.AddWithValue("@AppointmentDate", selectedCalendarDate.Date);
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@ClientID", cbPanelClients.SelectedValue);
+                    command.Parameters.AddWithValue("@TreatmentID", cbPanelTreatments.SelectedValue);
+                    command.Parameters.AddWithValue("@AppointmentDate", selectedCalendarDate.Date);
 
-                var p = command.Parameters.Add("@AppointmentTime", SqlDbType.Time);
-                p.Value = selectedCalendarTime;
+                    var p = command.Parameters.Add("@AppointmentTime", SqlDbType.Time);
+                    p.Value = selectedCalendarTime;
 
-                command.Parameters.AddWithValue("@Notes", txtPanelNotes.Text);
+                    command.Parameters.AddWithValue("@Notes", txtPanelNotes.Text);
 
-                command.ExecuteNonQuery();
-            }
+                    command.ExecuteNonQuery();
+                }
+
 
             //refresh everything
             LoadAppointments();
@@ -1414,6 +1643,11 @@ namespace TonyaRFApp
             sidePanel.Visibility = Visibility.Collapsed;
 
             MessageBox.Show("Appointment Booked Successfully.");
+            }
+            catch (SqlException ex)
+            {
+                ShowDbError("panel booking appointment", ex);
+            }
         }
 
     }

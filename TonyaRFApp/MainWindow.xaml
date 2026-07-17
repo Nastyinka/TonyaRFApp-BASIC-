@@ -10,7 +10,7 @@
         <!-- Colour Palette - change value here, changes everywhere-->
         <SolidColorBrush x:Key="PrimaryBrush" Color="#C9748F"/>
         <SolidColorBrush x:Key="DarkBrush" Color="#8B4F5E"/>
-        <SolidColorBrush x:Key="LavanderBrush" Color="#E8D5E8"/>
+        <SolidColorBrush x:Key="LavenderBrush" Color="#E8D5E8"/>
         <SolidColorBrush x:Key="MidLavBrush" Color="#9B8DB0"/>
         <SolidColorBrush x:Key="BackgroundBrush" Color="#FAF6F8"/>
         <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
@@ -48,9 +48,13 @@
                                         <!-- This style will hide the placeholder text when the TextBox has text or is focused -->
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource TemplatedParent}}" Value="">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding Text, RelativeSource={RelativeSource TemplatedParent}}" Value=""/>
+                                                        <Condition Binding="{Binding IsFocused, RelativeSource={RelativeSource TemplatedParent}}" Value="False"/>
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                            </MultiDataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Style>
@@ -100,11 +104,11 @@
         <Style TargetType="DataGrid">
             <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
             <Setter Property="RowBackground" Value="{StaticResource SurfaceBrush}"/>
-            <Setter Property="AlternatingRowBackground" Value="{StaticResource LavanderBrush}"/>
+            <Setter Property="AlternatingRowBackground" Value="{StaticResource LavenderBrush}"/>
             <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="GridLinesVisibility" Value="Horizontal"/>
-            <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource LavanderBrush}"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource LavenderBrush}"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="SelectionMode" Value="Single"/>
@@ -130,7 +134,7 @@
                                 <Setter Property="Foreground" Value="{StaticResource TextLightBrush}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource LavanderBrush}"/>
+                                <Setter Property="Background" Value="{StaticResource LavenderBrush}"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
@@ -178,7 +182,7 @@
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="{StaticResource TextDarkBrush}"/>
-            <Setter Property="Background" Value="{StaticResource LavanderBrush}"/>
+            <Setter Property="Background" Value="{StaticResource LavenderBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="16,8"/>
             <Setter Property="Template">
@@ -291,7 +295,7 @@
                             <TextBox x:Name="txtImplantDetails" Grid.Row="0" Grid.Column="4" Height="28" Style="{StaticResource PlaceholderStyle}" Tag="Implant Details"/>
 
                             <CheckBox x:Name="chkBotox" Content="Botox" Grid.Row="0" Grid.Column="6" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBox x:Name="txtBotoxDetails" Grid.Row="0" Grid.Column="7" Height="28" Style="{StaticResource PlaceholderStyle}"/>
+                            <TextBox x:Name="txtBotoxDetails" Grid.Row="0" Grid.Column="7" Height="28" Style="{StaticResource PlaceholderStyle}" Tag="Botox Details"/>
 
                             <CheckBox x:Name="chkFaceMetals" Content="Face Metals" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <TextBox x:Name="txtFaceMetalDetails" Grid.Row="2" Grid.Column="1" Height="28" Style="{StaticResource PlaceholderStyle}" Tag="Metal Details"/>
@@ -309,9 +313,11 @@
 
                         <Button Content="Update Client" Width="110" Height="30" Margin="0,0,8,0" Click="UpdateClient_Click"/>
 
-                        <Button Content="Delete Client" Width="110" Height="30" Margin="0,0,20,0" Click="DeleteClient_Click"/>
+                        <Button Content="Delete Client" Width="110" Height="30" Margin="0,0,8,0" Click="DeleteClient_Click"/>
 
-                        <Border Background="{StaticResource LavanderBrush}" CornerRadius="4" Padding="12,0" VerticalAlignment="Center">
+                        <Button Content="New Client" Width="110" Height="30" Margin="0,0,20,0" Click="NewClient_Click"/>
+
+                        <Border Background="{StaticResource LavenderBrush}" CornerRadius="4" Padding="12,0" VerticalAlignment="Center">
                             <TextBlock x:Name="txtTotalAppointments" Text="Total Appointments: -" FontWeight="SemiBold" Foreground="{StaticResource DarkBrush}" VerticalAlignment="Center"/>
                         </Border>
                     </StackPanel>
@@ -368,8 +374,8 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Client" Binding="{Binding ClientName}" Width="150"/>
                                 <DataGridTextColumn Header="Treatment" Binding="{Binding TreatmentName}" Width="180"/>
-                                <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat=€\{0:0.00\}}" Width="25"/>
-                                <DataGridTextColumn Header="Date" Binding="{Binding AppointmentDate, StringFormat=dd/MM/yyyy}"/>
+                                <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat=€\{0:0.00\}}" Width="80"/>
+                                <DataGridTextColumn Header="Date" Binding="{Binding AppointmentDate, StringFormat=dd/MM/yyyy}" Width="100"/>
                                 <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime}" Width="80"/>
                                 <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="*"/>
                             </DataGrid.Columns>
@@ -393,7 +399,7 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="120"/>
                                 <DataGridTextColumn Header="Surname" Binding="{Binding Surname}" Width="120"/>
-                                <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="130"/>
+                                <DataGridTextColumn Header="Phone" Binding="{Binding PhoneNumber}" Width="130"/>
                                 <DataGridTextColumn Header="DOB" Binding="{Binding DOB, StringFormat=dd/MM/yyyy}" Width="100"/>
                                 <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="200"/>
 
@@ -501,7 +507,7 @@
                                     <Button Content="✕" HorizontalAlignment="Right" Width="28" Height="28" Background="Transparent" Foreground="{StaticResource TextMutedBrush}" BorderThickness="0" FontSize="14" Click="CloseSidePanel_Click"/>
                                 </Grid>
 
-                                <Border x:Name="pnlDateTimeDisplay" Grid.Row="1" Background="{StaticResource LavanderBrush}" CornerRadius="4" Padding="8,6" Margin="0,0,0,12">
+                                <Border x:Name="pnlDateTimeDisplay" Grid.Row="1" Background="{StaticResource LavenderBrush}" CornerRadius="4" Padding="8,6" Margin="0,0,0,12">
                                     <TextBlock x:Name="txtPanelDateTime" FontWeight="SemiBold" Foreground="{StaticResource DarkBrush}" FontSize="13"/>
                                 </Border>
 
