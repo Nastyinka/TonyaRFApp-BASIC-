@@ -140,6 +140,22 @@
                     </Style>
                 </Setter.Value>
             </Setter>
+            <Setter Property="CellStyle">
+                <Setter.Value>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Padding" Value="8,4"/>
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextLightBrush}"/>
+                                <Setter Property="BorderBrush" Value="Transparent"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Setter.Value>
+            </Setter>
         </Style>
         <!-- ComboBox Style -->
         <Style TargetType="ComboBox">
@@ -236,7 +252,7 @@
                                 <DataGridTextColumn Header="Surname" Binding="{Binding Surname}" Width="120"/>
                                 <DataGridTextColumn Header="Phone" Binding="{Binding PhoneNumber}" Width="130"/>
                                 <DataGridTextColumn Header="DOB" Binding="{Binding DOB, StringFormat=dd/MM/yyyy}" Width="100"/>
-                                <DataGridTextColumn Header="Appointments" Binding="{Binding TotalAppointments}" Width="100"/>
+                                <DataGridTextColumn Header="Appointments" Binding="{Binding TotalAppointments}" Width="130"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </StackPanel>
