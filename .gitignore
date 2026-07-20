@@ -361,3 +361,14 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Compiled installer — distribute separately, not through Git
+*.exe
+*.msi
+
+# Signing key — private, never commit
+*.pfx
+
+# ClickOnce publish files — not needed in Git
+*.application
+*.manifest
