@@ -59,7 +59,7 @@ Download the new TonyaRF_Setup.exe from the Releases section
 Run it — it installs over the existing version automatically
 Your database and all client data are completely untouched
 
-❓ Troubleshooting
+Troubleshooting
 
 The app opens but shows a database error
 Make sure SQL Server Express is running. Open the Start Menu, search for SQL Server Configuration Manager, and check that the SQLEXPRESS service is started.
