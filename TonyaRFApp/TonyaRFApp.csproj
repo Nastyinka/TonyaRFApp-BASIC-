@@ -192,6 +192,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="CustomMessageBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -201,6 +205,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AppointmentInfo.cs" />
+    <Compile Include="CustomMessageBox.xaml.cs">
+      <DependentUpon>CustomMessageBox.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -224,6 +231,19 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <Resource Include="Fonts\DynaPuff-VariableFont_wdth,wght.ttf" />
+    <Resource Include="Fonts\DynaPuff-Bold.ttf" />
+    <Resource Include="Fonts\DynaPuff-Medium.ttf" />
+    <Resource Include="Fonts\DynaPuff-Regular.ttf" />
+    <Resource Include="Fonts\DynaPuff-SemiBold.ttf" />
+    <Resource Include="Fonts\DynaPuff_Condensed-Bold.ttf" />
+    <Resource Include="Fonts\DynaPuff_Condensed-Medium.ttf" />
+    <Resource Include="Fonts\DynaPuff_Condensed-Regular.ttf" />
+    <Resource Include="Fonts\DynaPuff_Condensed-SemiBold.ttf" />
+    <Resource Include="Fonts\DynaPuff_SemiCondensed-Bold.ttf" />
+    <Resource Include="Fonts\DynaPuff_SemiCondensed-Medium.ttf" />
+    <Resource Include="Fonts\DynaPuff_SemiCondensed-Regular.ttf" />
+    <Resource Include="Fonts\DynaPuff_SemiCondensed-SemiBold.ttf" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

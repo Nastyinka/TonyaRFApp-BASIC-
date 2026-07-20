@@ -49,7 +49,7 @@ namespace TonyaRFApp
 
         private void ShowDbError(string context, Exception ex)
         {
-            MessageBox.Show($"An error occurred while {context}.\n\n" + "Please make sure SQL Server is running.\n\n" + $"Details: {ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            CustomMessageBox.ShowError($"An error occurred while {context}.\n\n" + "Please make sure SQL Server is running.\n\n" + $"Details: {ex.Message}", "Database Error");
         }
         private void LoadClients()              
         {
@@ -222,19 +222,19 @@ namespace TonyaRFApp
         {
             if (string.IsNullOrWhiteSpace(txtFirstName.Text))
             {
-                MessageBox.Show("Please enter a first name.");
+                CustomMessageBox.Show("Please enter a first name.");
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(txtSurname.Text))
             {
-                MessageBox.Show("Please enter a surname");
+                CustomMessageBox.Show("Please enter a surname");
                 return;
             }
             
             if (string.IsNullOrWhiteSpace(txtPhone.Text))
             {
-                MessageBox.Show("Please enter a phone number.");
+                CustomMessageBox.Show("Please enter a phone number.");
                 return;
             }
             try
@@ -321,7 +321,7 @@ namespace TonyaRFApp
                 chkConsentSigned.IsChecked = false;
                 dpConsentDate.SelectedDate = null;
 
-                MessageBox.Show("Client added successfully.");
+                CustomMessageBox.Show("Client added successfully.");
             }
 
             catch (SqlException ex)
@@ -335,13 +335,13 @@ namespace TonyaRFApp
             // Basic validation
             if (string.IsNullOrWhiteSpace(txtTreatmentName.Text))
             {
-                MessageBox.Show("Please enter a treatment name.");
+                CustomMessageBox.Show("Please enter a treatment name.");
                 return;
             }
 
             if (!decimal.TryParse(txtPrice.Text, out decimal price))
             {
-                MessageBox.Show("Please enter a valid price (e.g. 45.00)");
+                CustomMessageBox.Show("Please enter a valid price (e.g. 45.00)");
                 return;
             }
             int? duration = null;
@@ -380,7 +380,7 @@ namespace TonyaRFApp
 
             LoadTreatments();
             LoadTreatmentComboBox(); //  keeps the booking tab in sync
-            MessageBox.Show("Treatment added successfully.");
+            CustomMessageBox.Show("Treatment added successfully.");
             }
             catch (SqlException ex)
             {
@@ -483,7 +483,7 @@ namespace TonyaRFApp
         {
             if (selectedClientId == -1)
             {
-                MessageBox.Show("Please select a client.");
+                CustomMessageBox.Show("Please select a client.");
                 return;
             }
             try
@@ -537,7 +537,7 @@ namespace TonyaRFApp
             LoadClients();
             LoadClientComboBox();
 
-            MessageBox.Show("Client Updated Successfully");
+            CustomMessageBox.Show("Client Updated Successfully");
             }
 
             catch (SqlException ex)
@@ -550,7 +550,7 @@ namespace TonyaRFApp
         {
             if (selectedAppointmentId == -1)
             {
-                MessageBox.Show("Please select an Appointment.");
+                CustomMessageBox.Show("Please select an Appointment.");
                 return;
             }
             TimeSpan? parsedTime = null;
@@ -591,7 +591,7 @@ namespace TonyaRFApp
             LoadAppointments();
             GenerateWeekGrid(currentWeekStart); // Refresh the week grid to reflect changes
 
-            MessageBox.Show("Appointment Updated Successfully");
+            CustomMessageBox.Show("Appointment Updated Successfully");
             }
 
             catch (SqlException ex)
@@ -603,12 +603,12 @@ namespace TonyaRFApp
         {
             if (selectedTreatmentId == -1)
             {
-                MessageBox.Show("Please select a treatment.");
+                CustomMessageBox.Show("Please select a treatment.");
                 return;
             }
             if (!decimal.TryParse(txtPrice.Text, out decimal price))
             {
-                MessageBox.Show("Please enter a valid price (e.g. 45.00)");
+                CustomMessageBox.Show("Please enter a valid price (e.g. 45.00)");
                 return;
             }
             //Parse duration saferly
@@ -646,7 +646,7 @@ namespace TonyaRFApp
             LoadTreatments();
             LoadTreatmentComboBox();
 
-            MessageBox.Show("Treatment Updated Successfully");
+            CustomMessageBox.Show("Treatment Updated Successfully");
             }
 
             catch (SqlException ex)
@@ -659,7 +659,7 @@ namespace TonyaRFApp
         {
             if (selectedClientId == -1)
             {
-                MessageBox.Show("Please select a client.");
+                CustomMessageBox.Show("Please select a client.");
                 return;
             }
 
@@ -684,12 +684,11 @@ namespace TonyaRFApp
                 }
                 if (hasAppointments)
                 {
-                    MessageBoxResult result = MessageBox.Show(
+                    MessageBoxResult result = CustomMessageBox.ShowConfirm(
                         "This client has an existing appointment. \n\n" +
                         "Click YES to delete the client AND all their appointments. \n" +
                         "Click NO to cancel.",
                         "Client Has Appointments",
-                        MessageBoxButton.YesNo,
                         MessageBoxImage.Warning);
 
                     if (result != MessageBoxResult.Yes)     // Delete Appointments first, THEN delete client (Child records deleted first)
@@ -717,10 +716,9 @@ namespace TonyaRFApp
                 {
                     // No Appointments, simply delete client - regular confirmation
 
-                    MessageBoxResult result = MessageBox.Show(
+                    MessageBoxResult result = CustomMessageBox.ShowConfirm(
                         "Are you sure you want to delete this client?",
-                        "Confirm Delete",
-                        MessageBoxButton.YesNo);
+                        "Confirm Delete");
 
                     if (result != MessageBoxResult.Yes)
                         return;
@@ -757,7 +755,7 @@ namespace TonyaRFApp
 
                 selectedClientId = -1;
 
-                MessageBox.Show("Client deleted successfully.");
+                CustomMessageBox.Show("Client deleted successfully.");
             }
             catch (SqlException ex)
             {
@@ -770,14 +768,13 @@ namespace TonyaRFApp
         {
             if (selectedAppointmentId == -1)
             {
-                MessageBox.Show("Please select an Appointment.");
+                CustomMessageBox.Show("Please select an Appointment.");
                 return;
             }
 
-            MessageBoxResult result = MessageBox.Show(
+            MessageBoxResult result = CustomMessageBox.ShowConfirm(
                 "Are you sure you want to delete this Appointment?",
-                "Confirm Delete",
-                MessageBoxButton.YesNo);
+                "Confirm Delete");
 
             if (result != MessageBoxResult.Yes)
                 return;
@@ -803,7 +800,7 @@ namespace TonyaRFApp
             dpAppointmentDate.SelectedDate = null;
 
 
-            MessageBox.Show("Appointment deleted successfully.");
+            CustomMessageBox.Show("Appointment deleted successfully.");
             }
             catch (SqlException ex)
             {
@@ -814,14 +811,13 @@ namespace TonyaRFApp
         {
             if (selectedTreatmentId == -1)
             {
-                MessageBox.Show("Please select a treatment.");
+                CustomMessageBox.Show("Please select a treatment.");
                 return;
             }
 
-            MessageBoxResult result = MessageBox.Show(
+            MessageBoxResult result = CustomMessageBox.ShowConfirm(
                 "Are you sure you want to delete this treatment?",
-                "Confirm Delete",
-                MessageBoxButton.YesNo);
+                "Confirm Delete");
 
             if (result != MessageBoxResult.Yes)
                 return;
@@ -848,7 +844,7 @@ namespace TonyaRFApp
 
             selectedTreatmentId = -1;
 
-            MessageBox.Show("Treatment deleted successfully.");
+            CustomMessageBox.Show("Treatment deleted successfully.");
             }
             catch (SqlException ex)
             {
@@ -952,25 +948,25 @@ namespace TonyaRFApp
 
             if (cbClients.SelectedValue == null)
             {
-                MessageBox.Show("Please select a client.");
+                CustomMessageBox.Show("Please select a client.");
                 return;
             }
 
             if (cbTreatments.SelectedValue == null)
             {
-                MessageBox.Show("Please select a treatment.");
+                CustomMessageBox.Show("Please select a treatment.");
                 return;
             }
 
             if (dpAppointmentDate.SelectedDate == null)
             {
-                MessageBox.Show("Please select a date.");
+                CustomMessageBox.Show("Please select a date.");
                 return;
             }
 
             if (cbAppointmentTime.SelectedItem == null)
             {
-                MessageBox.Show("Please select a time.");
+                CustomMessageBox.Show("Please select a time.");
                 return;
             }
             try
@@ -1015,7 +1011,7 @@ namespace TonyaRFApp
             LoadAppointments();
             GenerateWeekGrid(currentWeekStart); // Refresh the week grid to reflect new appointment
 
-            MessageBox.Show("Appointment Booked Successfully.");
+            CustomMessageBox.Show("Appointment Booked Successfully.");
             }
             catch (SqlException ex)
             {
@@ -1465,7 +1461,7 @@ namespace TonyaRFApp
         }
         private void PanelDeleteAppointment_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult result = MessageBox.Show("Are you sure you want to delete this appointment?", "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            MessageBoxResult result = CustomMessageBox.ShowConfirm("Are you sure you want to delete this appointment?", "Confirm Delete", MessageBoxImage.Warning);
 
             if (result != MessageBoxResult.Yes)
                 return;
@@ -1485,7 +1481,7 @@ namespace TonyaRFApp
             GenerateWeekGrid(currentWeekStart);
             sidePanel.Visibility = Visibility.Collapsed;
             selectedCalendarAppointmentId = -1;
-            MessageBox.Show("Appointment deleted successfully");
+            CustomMessageBox.Show("Appointment deleted successfully");
             }
             catch (SqlException ex)
             {
@@ -1496,12 +1492,12 @@ namespace TonyaRFApp
         {
             if (cbPanelClients.SelectedValue == null)
             {
-                MessageBox.Show("Please select a client.");
+                CustomMessageBox.Show("Please select a client.");
                 return;
             }
             if (cbPanelTreatments.SelectedValue == null)
             {
-                MessageBox.Show("Please select a treatment.");
+                CustomMessageBox.Show("Please select a treatment.");
                 return;
             }
 
@@ -1513,7 +1509,7 @@ namespace TonyaRFApp
 
             if (newDate == null || newTime == null)
             {
-                MessageBox.Show("Please select a date and time.");
+                CustomMessageBox.Show("Please select a date and time.");
                 return;
             }
             try
@@ -1550,7 +1546,7 @@ namespace TonyaRFApp
             LoadAppointments();
             GenerateWeekGrid(currentWeekStart); // Refresh the week grid to reflect changes
             sidePanel.Visibility = Visibility.Collapsed; // Close the side panel
-            MessageBox.Show("Appointment Updated Successfully.");
+            CustomMessageBox.Show("Appointment Updated Successfully.");
             }
             catch (SqlException ex)
             {
@@ -1588,12 +1584,12 @@ namespace TonyaRFApp
 
             if (cbPanelClients.SelectedValue == null)
             {
-                MessageBox.Show("Please select a client.");
+                CustomMessageBox.Show("Please select a client.");
                 return; 
             }
             if (cbPanelTreatments.SelectedValue == null)
             {
-                MessageBox.Show("Please select a treatment.");
+                CustomMessageBox.Show("Please select a treatment.");
                 return;
             }
             try
@@ -1642,7 +1638,7 @@ namespace TonyaRFApp
             // close panel
             sidePanel.Visibility = Visibility.Collapsed;
 
-            MessageBox.Show("Appointment Booked Successfully.");
+            CustomMessageBox.Show("Appointment Booked Successfully.");
             }
             catch (SqlException ex)
             {
