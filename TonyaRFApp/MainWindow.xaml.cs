@@ -159,6 +159,25 @@ namespace TonyaRFApp
                 ShowDbError("loading treatments", ex);
             }
         }
+
+        //Window control buttons
+        private void BtnMinimise_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void BtnMaximise_Click(object sender, RoutedEventArgs e)
+        {
+            if (WindowState == WindowState.Maximized)
+                WindowState = WindowState.Normal;
+            else
+                WindowState = WindowState.Maximized;
+        }
+
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
         //clear button for client form
         private void NewClient_Click(object sender, RoutedEventArgs e)
         {

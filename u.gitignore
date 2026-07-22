@@ -1,0 +1,25 @@
+# Build output — never commit compiled files
+bin/
+obj/
+
+# Visual Studio user-specific files
+.vs/
+*.user
+*.suo
+
+# NuGet packages — restored automatically, don't commit
+packages/
+
+# Published output
+publish/
+
+# Compiled installer — distribute separately, not through Git
+*.exe
+*.msi
+
+# Signing key — private, never commit
+*.pfx
+
+# ClickOnce publish files — not needed in Git
+*.application
+*.manifest
